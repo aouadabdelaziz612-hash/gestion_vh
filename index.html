@@ -1,1245 +1,1016 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Gestion Volume Horaire — FSM</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GestionVH — Dept. Informatique FSM</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#2563eb;--blue2:#3b82f6;--blue3:#dbeafe;--blue4:#eff6ff;
+  --purple:#7c3aed;--green:#16a34a;--orange:#ea580c;--red:#dc2626;
+  --bg:#f8faff;--white:#ffffff;--sidebar:#1e293b;--border:#e2e8f0;
+  --text:#0f172a;--text2:#64748b;--text3:#94a3b8;
+  --r:14px;--shadow:0 4px 24px rgba(37,99,235,.1);--shadow2:0 2px 12px rgba(0,0,0,.08);
+  --font:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden}
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#f59e0b" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="GestionVH" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes float2{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+@keyframes float3{0%,100%{transform:translateY(0) rotate(1deg)}50%{transform:translateY(-8px) rotate(-1deg)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}70%{box-shadow:0 0 0 12px rgba(37,99,235,0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes barGrow{from{height:0}to{height:var(--h)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+.fade-up{animation:fadeUp .6s ease both}
+.fade-up-1{animation:fadeUp .6s .1s ease both}
+.fade-up-2{animation:fadeUp .6s .2s ease both}
+.fade-up-3{animation:fadeUp .6s .35s ease both}
+.fade-up-4{animation:fadeUp .6s .5s ease both}
+.fade-in{animation:fadeIn .5s ease both}
 
-  <!-- React + Recharts via CDN -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+/* ── LANDING LAYOUT ── */
+.landing-wrap{display:flex;min-height:100vh}
 
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg:        #0f172a;
-      --bg2:       #1e293b;
-      --bg3:       #273548;
-      --border:    #334155;
-      --gold:      #f59e0b;
-      --gold2:     #fbbf24;
-      --text:      #f1f5f9;
-      --text2:     #94a3b8;
-      --blue:      #3b82f6;
-      --green:     #10b981;
-      --red:       #ef4444;
-      --purple:    #8b5cf6;
-      --cyan:      #06b6d4;
-      --radius:    12px;
-      --shadow:    0 4px 24px rgba(0,0,0,.4);
-    }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg2); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* LEFT SIDEBAR */
+.l-sidebar{width:170px;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20}
+.ls-logo{padding:1.25rem 1rem;border-bottom:1px solid #ffffff0f}
+.ls-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:.5rem}
+.ls-logo-name{font-size:12px;font-weight:700;color:#fff;line-height:1.2}
+.ls-logo-sub{font-size:9px;color:#94a3b8;margin-top:2px}
+.ls-nav{flex:1;padding:10px 0}
+.ln-item{display:flex;align-items:center;gap:8px;padding:9px 14px;color:#94a3b8;font-size:11.5px;cursor:pointer;transition:all .15s;border-radius:0;border-left:2px solid transparent;text-decoration:none}
+.ln-item:hover{background:#ffffff0a;color:#fff}
+.ln-item.active{background:#2563eb1a;color:var(--blue2);border-left-color:var(--blue2);font-weight:600}
+.ln-item .ln-icon{font-size:14px;flex-shrink:0;width:18px;text-align:center}
+.ls-year{padding:.75rem 1rem;border-top:1px solid #ffffff0f}
+.ls-year-lbl{font-size:9px;color:#64748b;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.ls-year-val{background:#1e3a5f;border:1px solid #334155;border-radius:8px;padding:5px 10px;font-size:11px;color:#cbd5e1;cursor:pointer}
 
-    /* Landing page styles */
-    .landing { min-height: 100vh; }
-    .hero {
-      min-height: 100vh;
-      background: radial-gradient(ellipse at 30% 20%, #1e3a8a22 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 80%, #f59e0b11 0%, transparent 50%),
-                  var(--bg);
-      display: flex; flex-direction: column;
-      position: relative; overflow: hidden;
-    }
-    .hero::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23334155' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-      pointer-events: none;
-    }
-    .nav-bar {
-      position: relative; z-index: 10;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 1.25rem 3rem;
-      border-bottom: 1px solid #ffffff08;
-      backdrop-filter: blur(8px);
-    }
-    .nav-logo {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.25rem; font-weight: 700; color: var(--gold);
-      letter-spacing: -0.02em;
-    }
-    .nav-badge {
-      font-size: 11px; color: var(--text2); background: var(--bg2);
-      border: 1px solid var(--border); border-radius: 20px;
-      padding: 4px 12px; letter-spacing: 0.05em; text-transform: uppercase;
-    }
-    .hero-content {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      flex-direction: column; text-align: center;
-      padding: 4rem 2rem; position: relative; z-index: 2;
-    }
-    .hero-tag {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: #f59e0b14; border: 1px solid #f59e0b33;
-      border-radius: 20px; padding: 6px 16px;
-      font-size: 12px; color: var(--gold); letter-spacing: 0.08em;
-      text-transform: uppercase; margin-bottom: 2rem;
-    }
-    .hero-tag::before { content: '●'; font-size: 8px; }
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2.5rem, 8vw, 5rem);
-      font-weight: 900; line-height: 1.05;
-      color: var(--text); margin-bottom: 1rem;
-    }
-    .hero-title span { color: var(--gold); }
-    .hero-sub {
-      font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text2);
-      max-width: 560px; line-height: 1.6; margin-bottom: 3rem;
-    }
-    .btn-primary {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: var(--gold); color: #0f172a;
-      font-weight: 700; font-size: 1rem;
-      border: none; border-radius: 50px; padding: 14px 32px;
-      cursor: pointer; transition: all .2s;
-      box-shadow: 0 0 40px #f59e0b33;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .btn-primary:hover { background: var(--gold2); transform: translateY(-2px); box-shadow: 0 0 60px #f59e0b55; }
-    .btn-ghost {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: transparent; color: var(--text2);
-      font-weight: 500; font-size: 0.9rem;
-      border: 1px solid var(--border); border-radius: 50px; padding: 12px 28px;
-      cursor: pointer; transition: all .2s;
-      font-family: 'DM Sans', sans-serif;
-    }
-    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
-    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-    .stack-row { display: flex; gap: 8px; margin-top: 2.5rem; flex-wrap: wrap; justify-content: center; }
-    .stack-chip {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 4px 12px; font-size: 12px; color: var(--text2);
-    }
+/* HERO AREA */
+.l-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.l-topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;padding:0 1.5rem;gap:10px;position:sticky;top:0;z-index:10;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.tb-icon-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:15px}
+.tb-icon-btn:hover{background:var(--blue3);border-color:var(--blue2)}
+.btn-connect{background:var(--blue);color:#fff;border:none;border-radius:50px;padding:8px 20px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:6px;transition:all .2s;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+.btn-connect:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 20px rgba(37,99,235,.45)}
 
-    /* Floating cards decoration */
-    .float-card {
-      position: absolute; background: var(--bg2); border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 16px;
-      animation: floatAnim 6s ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes floatAnim {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-12px); }
-    }
-    .float-card.c1 { top: 20%; right: 8%; animation-delay: 0s; }
-    .float-card.c2 { top: 55%; right: 4%; animation-delay: 2s; }
-    .float-card.c3 { top: 30%; left: 4%; animation-delay: 4s; }
+/* HERO SPLIT */
+.hero-split{display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 52px)}
+.hero-left{background:linear-gradient(145deg,#1e40af,#2563eb,#3b82f6);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:2rem}
+.hero-left::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 20% 80%,rgba(99,102,241,.4),transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(6,182,212,.2),transparent 50%)}
 
-    /* About section */
-    .section { padding: 6rem 2rem; }
-    .section-inner { max-width: 1100px; margin: 0 auto; }
-    .section-tag {
-      font-size: 11px; color: var(--gold); letter-spacing: 0.15em;
-      text-transform: uppercase; margin-bottom: 1rem;
-    }
-    .section-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2rem, 5vw, 3rem); font-weight: 700;
-      color: var(--text); margin-bottom: 1.5rem; line-height: 1.1;
-    }
-    .section-body { font-size: 1.05rem; color: var(--text2); line-height: 1.8; max-width: 600px; margin-bottom: 2.5rem; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 500px; }
-    .stat-item { text-align: center; }
-    .stat-num { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; color: var(--gold); }
-    .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 4px; }
+/* DASHBOARD MOCKUP */
+.mock-wrap{position:relative;z-index:2;width:100%;max-width:420px}
+.mock-screen{background:rgba(255,255,255,.96);border-radius:16px;padding:1.1rem;box-shadow:0 30px 80px rgba(0,0,0,.35);animation:float 6s ease-in-out infinite;position:relative}
+.mock-hdr{display:flex;align-items:center;gap:6px;margin-bottom:.9rem;padding-bottom:.7rem;border-bottom:1px solid #f1f5f9}
+.mock-title{font-size:11px;font-weight:700;color:#1e293b}
+.mock-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:.8rem}
+.msc{background:var(--bg);border-radius:8px;padding:7px 6px}
+.msc-icon{font-size:13px;margin-bottom:2px}
+.msc-val{font-size:11px;font-weight:700;color:var(--text)}
+.msc-lbl{font-size:8px;color:var(--text2)}
+.mock-charts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc-box{background:var(--bg);border-radius:8px;padding:7px}
+.mc-lbl{font-size:8px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.bar-row{display:flex;align-items:flex-end;gap:3px;height:50px}
+.bar-item{flex:1;border-radius:3px 3px 0 0;position:relative;animation:barGrow .8s ease both}
+.pie-mock{position:relative;width:48px;height:48px;margin:0 auto}
+.pie-svg circle{transition:stroke-dashoffset .8s ease}
 
-    /* Features */
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-    .feature-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.75rem;
-      transition: border-color .2s, transform .2s;
-    }
-    .feature-card:hover { border-color: var(--gold); transform: translateY(-4px); }
-    .feature-icon {
-      width: 48px; height: 48px; border-radius: 12px;
-      background: #f59e0b14; border: 1px solid #f59e0b22;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; margin-bottom: 1rem;
-    }
-    .feature-title { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
-    .feature-desc { font-size: 0.9rem; color: var(--text2); line-height: 1.6; }
+/* FLOATING BADGES */
+.float-badge{position:absolute;background:white;border-radius:12px;padding:8px 12px;box-shadow:0 8px 32px rgba(0,0,0,.2);display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:600;color:#1e293b;white-space:nowrap}
+.fb-1{top:12%;left:-5%;animation:float2 5s ease-in-out infinite .5s}
+.fb-2{bottom:18%;right:-8%;animation:float3 5.5s ease-in-out infinite 1s}
+.fb-3{top:55%;left:-10%;animation:float 4.5s ease-in-out infinite 1.5s}
+.fb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
-    /* Roles */
-    .roles-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
-    .role-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.75rem;
-    }
-    .role-badge {
-      display: inline-block; font-size: 11px; font-weight: 600;
-      border-radius: 20px; padding: 3px 10px; margin-bottom: 1rem;
-      text-transform: uppercase; letter-spacing: 0.05em;
-    }
-    .role-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.75rem; }
-    .role-list { list-style: none; }
-    .role-list li { font-size: 0.875rem; color: var(--text2); padding: 4px 0; }
-    .role-list li::before { content: '→ '; color: var(--gold); }
+/* HERO RIGHT */
+.hero-right{background:var(--white);display:flex;flex-direction:column;justify-content:center;padding:3rem 2.5rem;gap:0}
+.hr-tag{display:inline-flex;align-items:center;gap:6px;background:#fef9c3;border:1px solid #fde047;border-radius:20px;padding:4px 14px;font-size:11px;font-weight:600;color:#854d0e;margin-bottom:1.5rem;width:fit-content}
+.hr-title{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:800;line-height:1.15;margin-bottom:1.1rem;color:#0f172a}
+.hr-title span{color:var(--blue)}
+.hr-sub{font-size:.9rem;color:var(--text2);line-height:1.75;max-width:420px;margin-bottom:2rem}
+.hero-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem}
+.hf-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;gap:10px;align-items:flex-start;transition:all .2s}
+.hf-card:hover{border-color:var(--blue2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.hf-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hf-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px}
+.hf-desc{font-size:10.5px;color:var(--text2);line-height:1.5}
+.l-footer{background:var(--white);border-top:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text2)}
 
-    /* CTA */
-    .cta-section {
-      background: radial-gradient(ellipse at center, #1e3a8a22 0%, transparent 70%),
-                  linear-gradient(180deg, transparent, var(--bg2));
-      border-top: 1px solid var(--border);
-      padding: 6rem 2rem; text-align: center;
-    }
+/* ── APP LAYOUT ── */
+.app-wrap{display:flex;height:100vh;overflow:hidden}
+.app-sidebar{width:185px;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.as-logo{padding:1.25rem 1rem;border-bottom:1px solid #ffffff0f}
+.as-logo-icon{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:.5rem}
+.as-logo-name{font-size:12.5px;font-weight:700;color:#fff}
+.as-logo-sub{font-size:9px;color:#94a3b8}
+.as-nav{flex:1;padding:8px 0}
+.as-item{display:flex;align-items:center;gap:8px;padding:9px 14px;color:#94a3b8;font-size:11.5px;cursor:pointer;transition:all .12s;border-left:2px solid transparent;background:transparent;border-right:none;border-top:none;border-bottom:none;width:100%;font-family:var(--font);text-align:left}
+.as-item:hover{background:#ffffff0a;color:#e2e8f0}
+.as-item.active{background:#2563eb1a;color:var(--blue2);border-left-color:var(--blue2);font-weight:600}
+.as-item .ai{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+.as-foot{padding:.75rem;border-top:1px solid #ffffff0f}
+.as-year{background:#1e3a5f;border:1px solid #334155;border-radius:8px;padding:6px 10px;font-size:10px;color:#94a3b8;margin-bottom:.5rem}
+.as-year-lbl{font-size:9px;color:#475569;margin-bottom:2px}
+.app-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.app-topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;flex-shrink:0}
+.at-left{display:flex;align-items:center;gap:10px}
+.at-title{font-size:14px;font-weight:700;color:var(--text)}
+.at-right{display:flex;align-items:center;gap:8px}
+.content{flex:1;overflow-y:auto;padding:1.5rem}
 
-    /* Footer */
-    .footer {
-      border-top: 1px solid var(--border); padding: 2rem;
-      text-align: center; font-size: 0.8rem; color: var(--text2);
-    }
+/* ── LOGIN ── */
+.login-page{min-height:100vh;display:flex;background:var(--bg)}
+.login-left{width:420px;background:linear-gradient(145deg,#1e40af,#2563eb);display:flex;align-items:center;justify-content:center;padding:2rem;flex-shrink:0}
+.login-right{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-box{background:var(--white);border-radius:20px;padding:2.25rem;width:380px;box-shadow:0 8px 40px rgba(0,0,0,.1);animation:scaleIn .4s ease}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
+.ll-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.ll-name{font-size:15px;font-weight:800;color:var(--text)}
+.ll-sub{font-size:10px;color:var(--text2)}
 
-    /* APP styles */
-    .app-wrap { display: flex; height: 100vh; overflow: hidden; }
-    .sidebar {
-      width: 240px; background: var(--bg2); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; flex-shrink: 0;
-      transition: width .25s;
-    }
-    .sidebar.closed { width: 0; overflow: hidden; }
-    .sidebar-logo {
-      padding: 1.25rem 1rem; border-bottom: 1px solid var(--border);
-    }
-    .sidebar-logo-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 15px; font-weight: 700; color: var(--gold);
-    }
-    .sidebar-logo-sub { font-size: 10px; color: var(--text2); margin-top: 2px; }
-    .sidebar-nav { flex: 1; padding: 8px 0; overflow-y: auto; }
-    .nav-item {
-      width: 100%; display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; background: transparent;
-      color: var(--text2); border: none; cursor: pointer;
-      font-size: 13px; font-weight: 400; text-align: start;
-      transition: all .15s; font-family: 'DM Sans', sans-serif;
-      white-space: nowrap;
-    }
-    .nav-item:hover { background: var(--bg3); color: var(--text); }
-    .nav-item.active { background: #f59e0b14; color: var(--gold); font-weight: 600; border-right: 2px solid var(--gold); }
-    .nav-icon { font-size: 16px; flex-shrink: 0; }
+/* ── FORMS / UI ── */
+.form-label{font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:9px 13px;font-size:.875rem;color:var(--text);outline:none;font-family:var(--font);transition:border-color .15s,box-shadow .15s;margin-bottom:1rem}
+.form-input:focus{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
+.form-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:9px 13px;font-size:.875rem;color:var(--text);outline:none;font-family:var(--font);transition:border-color .15s;margin-bottom:1rem;cursor:pointer}
+.form-select:focus{border-color:var(--blue2)}
+.error-msg{background:#fef2f2;border:1px solid #fca5a5;color:var(--red);border-radius:9px;padding:8px 13px;font-size:.8rem;margin-bottom:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-group{margin-bottom:.75rem}
 
-    .topbar {
-      height: 56px; background: var(--bg2); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.25rem; flex-shrink: 0;
-    }
-    .main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
-    .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+/* ── BUTTONS ── */
+.btn{border-radius:9px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;border:1.5px solid transparent;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 4px 12px rgba(37,99,235,.25)}
+.btn-outline{background:transparent;color:var(--blue);border-color:var(--blue2)}
+.btn-ghost{background:var(--bg);color:var(--text2);border-color:var(--border)}
+.btn-red{background:#fef2f2;color:var(--red);border-color:#fca5a5}
+.btn-green{background:#f0fdf4;color:var(--green);border-color:#86efac}
+.btn-sm{padding:4px 10px;font-size:11px}
 
-    /* Cards */
-    .card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem;
-    }
-    .stat-card {
-      background: var(--bg2); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.1rem;
-      display: flex; align-items: center; gap: 14px;
-    }
-    .stat-icon {
-      width: 44px; height: 44px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; flex-shrink: 0;
-    }
-    .stat-val { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-lbl2 { font-size: 11px; color: var(--text2); font-weight: 600; margin-bottom: 3px; }
-    .stat-sub2 { font-size: 11px; color: var(--text2); margin-top: 3px; }
+/* ── CARDS ── */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;box-shadow:var(--shadow2)}
+.card-title{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.1rem;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow2);transition:all .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.sc-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sc-val{font-size:1.6rem;font-weight:800;line-height:1;color:var(--text)}
+.sc-lbl{font-size:10.5px;color:var(--text2);font-weight:600;margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em}
+.sc-sub{font-size:10px;color:var(--text3);margin-top:3px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.25rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1000px){.grid-4{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.hero-split{grid-template-columns:1fr}.hero-left{display:none}.l-sidebar{display:none}}
 
-    /* Grid */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .grid-auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-    @media (max-width: 768px) {
-      .grid-2 { grid-template-columns: 1fr; }
-      .nav-bar { padding: 1rem 1.25rem; }
-      .float-card { display: none; }
-    }
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th{padding:9px 14px;text-align:left;font-size:10px;color:var(--text2);font-weight:700;border-bottom:2px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.06em}
+td{padding:9px 14px;font-size:12.5px;color:var(--text);border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f8faff}
+.badge{border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700}
+.bdg-cm{background:#dbeafe;color:#1d4ed8}
+.bdg-td{background:#dcfce7;color:#15803d}
+.bdg-tp{background:#fef3c7;color:#b45309}
 
-    /* Table */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; }
-    th { padding: 10px 14px; text-align: start; font-size: 11px; color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    td { padding: 10px 14px; font-size: 13px; color: var(--text); border-bottom: 1px solid #1e293b77; }
-    tr:hover td { background: var(--bg3); }
+/* ── PROGRESS ── */
+.prog-bg{background:var(--border);border-radius:4px;height:6px;overflow:hidden}
+.prog-fill{height:100%;border-radius:4px;transition:width .5s ease}
 
-    /* Form */
-    .form-label { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 4px; display: block; }
-    .form-input {
-      width: 100%; background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 8px; padding: 8px 12px; font-size: 14px;
-      color: var(--text); outline: none;
-      font-family: 'DM Sans', sans-serif;
-      transition: border-color .15s;
-    }
-    .form-input:focus { border-color: var(--gold); }
-    .form-grid { display: grid; gap: 12px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);padding:1rem}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--white);border-radius:20px;padding:1.75rem;width:500px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 80px rgba(0,0,0,.2);animation:scaleIn .2s ease;border:1px solid var(--border)}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.modal-title{font-size:15px;font-weight:800}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2)}
+.modal-close:hover{background:var(--border)}
 
-    /* Buttons */
-    .btn { border-radius: 8px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; font-family: 'DM Sans', sans-serif; transition: opacity .15s; }
-    .btn:hover { opacity: 0.85; }
-    .btn-sm { padding: 4px 10px; font-size: 12px; }
-    .btn-blue { background: var(--blue); color: #fff; }
-    .btn-gold { background: var(--gold); color: #0f172a; font-weight: 700; }
-    .btn-dark { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-    .btn-red { background: #ef444422; color: var(--red); border: 1px solid #ef444433; }
+/* ── TOAST ── */
+#toast{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 16px;font-size:12.5px;box-shadow:0 8px 30px rgba(0,0,0,.12);animation:slideIn .25s ease;display:flex;align-items:center;gap:8px;pointer-events:all}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
 
-    /* Badge */
-    .badge { border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
-    .modal-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-    .modal-title { font-size: 16px; font-weight: 700; color: var(--text); }
-
-    /* Progress bar */
-    .progress-bg { background: var(--bg3); border-radius: 4px; height: 6px; overflow: hidden; }
-    .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
-
-    /* Login */
-    .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 30% 30%, #1e3a8a22 0%, transparent 60%), var(--bg); }
-    .login-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; width: 380px; max-width: 95vw; box-shadow: var(--shadow); }
-    .login-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .login-sub { font-size: 13px; color: var(--text2); margin-bottom: 2rem; }
-
-    /* Install banner */
-    .install-banner {
-      position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
-      background: var(--bg2); border: 1px solid var(--gold);
-      border-radius: 50px; padding: 10px 20px;
-      display: flex; align-items: center; gap: 12px;
-      z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,.4);
-      font-size: 13px; white-space: nowrap;
-    }
-
-    /* RTL support */
-    [dir="rtl"] .nav-item.active { border-right: none; border-left: 2px solid var(--gold); }
-    [dir="rtl"] th, [dir="rtl"] td { text-align: right; }
-  </style>
+/* ── MISC ── */
+.page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.page-title{font-size:1.15rem;font-weight:800;color:var(--text)}
+.empty-state{text-align:center;padding:3rem;color:var(--text2);font-size:.9rem}
+.prog-label{display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px}
+.range-wrap{display:flex;align-items:center;gap:12px;margin:1rem 0}
+.range-wrap input[type=range]{flex:1;accent-color:var(--blue)}
+.range-val{font-size:1rem;font-weight:800;color:var(--blue);min-width:50px}
+.prev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
+.prev-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;text-align:center;box-shadow:var(--shadow2)}
+.prev-val{font-size:2rem;font-weight:800;color:var(--blue)}
+.prev-lbl{font-size:11px;color:var(--text2);margin-top:4px;font-weight:500}
+</style>
 </head>
 <body>
-<div id="root"></div>
+<div id="app"></div>
+<div id="toast"></div>
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span class="modal-title" id="modal-title"></span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
 
-<script type="text/babel">
-const { useState, useMemo, useEffect } = React;
-const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } = Recharts;
-
-// ── Translations ─────────────────────────────────────────────────────────────
-const T = {
-  fr: {
-    dir:"ltr", flag:"🇫🇷",
-    app:"GestionVH", sub:"Volume Horaire — FSM Meknès",
-    login:"Connexion", user:"Nom d'utilisateur", pass:"Mot de passe", loginBtn:"Accéder au tableau de bord",
-    nav:{ dash:"Tableau de bord", fil:"Filières", ens:"Enseignants", crs:"Cours", rep:"Répartition", stat:"Statistiques", prev:"Prévisions" },
-    logout:"Déconnexion", welcome:"Bienvenue", admin:"Administrateur", search:"Rechercher...",
-    add:"Ajouter", edit:"Modifier", del:"Supprimer", save:"Sauvegarder", cancel:"Annuler", close:"Fermer",
-    totalVH:"Volume horaire total", totalEns:"Total enseignants", totalFil:"Total filières",
-    moyVH:"Moyenne VH / ens.", totalCrs:"Total cours", heures:"heures",
-    cm:"Cours Magistraux", td:"Travaux Dirigés", tp:"Travaux Pratiques",
-    nom:"Nom", prenom:"Prénom", email:"Email", spec:"Spécialité", niveau:"Niveau",
-    semestre:"Semestre", desc:"Description", type:"Type", ens_label:"Enseignant",
-    fil_label:"Filière", heures_label:"Heures", intitule:"Intitulé",
-    vhTotal:"VH Total (h)", vhAssigne:"VH Assigné (h)", charge:"Charge",
-    vhParEns:"VH par enseignant", vhParFil:"VH par filière", repartTypes:"Répartition par type",
-    prevTitle:"Prévisions — Année Suivante", basedOn:"Basé sur données actuelles",
-    growth:"Taux de croissance (%)", generate:"Générer prévision",
-    prevTot:"VH totale prévue", prevNb:"Enseignants nécessaires", prevMoy:"Moyenne prévue",
-    repTitle:"Répartition du volume horaire", affecte:"Affecté", libre:"Libre",
-    statDept:"Statistiques du département", synthese:"Synthèse",
-    newFil:"Nouvelle filière", newEns:"Nouvel enseignant", newCrs:"Nouveau cours",
-    actions:"Actions", details:"Détails", confirmDel:"Confirmer la suppression ?",
-    enterApp:"Accéder à l'application", learnMore:"En savoir plus",
-    heroTitle1:"Gestion du", heroTitle2:"Volume Horaire",
-    heroSub:"Une plateforme centralisée pour organiser, répartir et suivre les heures d'enseignement au sein du Département Informatique.",
-    aboutTitle:"Un outil conçu pour le Département Informatique",
-    aboutBody:"Ce système remplace la gestion manuelle des volumes horaires par une solution numérique équitable et transparente. Il couvre la gestion des filières, l'affectation des enseignants, les statistiques et la prévision des charges futures.",
-    rolesTitle:"Trois rôles, trois expériences",
-    installApp:"Installer l'application", installDesc:"Disponible hors ligne",
-  },
-  ar: {
-    dir:"rtl", flag:"🇲🇦",
-    app:"إدارة الحجم الساعي", sub:"قسم الإعلاميات — FSM مكناس",
-    login:"تسجيل الدخول", user:"اسم المستخدم", pass:"كلمة المرور", loginBtn:"الدخول إلى لوحة القيادة",
-    nav:{ dash:"لوحة القيادة", fil:"التخصصات", ens:"الأساتذة", crs:"المقررات", rep:"التوزيع", stat:"الإحصاءات", prev:"التوقعات" },
-    logout:"خروج", welcome:"مرحباً", admin:"مدير النظام", search:"بحث...",
-    add:"إضافة", edit:"تعديل", del:"حذف", save:"حفظ", cancel:"إلغاء", close:"إغلاق",
-    totalVH:"الحجم الساعي الإجمالي", totalEns:"إجمالي الأساتذة", totalFil:"إجمالي التخصصات",
-    moyVH:"متوسط الحجم الساعي", totalCrs:"إجمالي المقررات", heures:"ساعة",
-    cm:"محاضرات", td:"أعمال موجهة", tp:"أعمال تطبيقية",
-    nom:"اسم العائلة", prenom:"الاسم الأول", email:"البريد الإلكتروني", spec:"التخصص", niveau:"المستوى",
-    semestre:"الفصل", desc:"الوصف", type:"النوع", ens_label:"الأستاذ",
-    fil_label:"التخصص", heures_label:"الساعات", intitule:"العنوان",
-    vhTotal:"الحجم الكلي (س)", vhAssigne:"الحجم المُعيَّن (س)", charge:"الحصة",
-    vhParEns:"الحجم الساعي لكل أستاذ", vhParFil:"الحجم الساعي لكل تخصص", repartTypes:"توزيع حسب النوع",
-    prevTitle:"توقعات السنة القادمة", basedOn:"بناءً على البيانات الحالية",
-    growth:"معدل النمو (%)", generate:"توليد التوقعات",
-    prevTot:"الحجم الساعي المتوقع", prevNb:"الأساتذة المطلوبون", prevMoy:"المتوسط المتوقع",
-    repTitle:"توزيع الحجم الساعي", affecte:"معيَّن", libre:"متاح",
-    statDept:"إحصاءات القسم", synthese:"ملخص",
-    newFil:"تخصص جديد", newEns:"أستاذ جديد", newCrs:"مقرر جديد",
-    actions:"الإجراءات", details:"تفاصيل", confirmDel:"تأكيد الحذف؟",
-    enterApp:"الدخول إلى التطبيق", learnMore:"معرفة المزيد",
-    heroTitle1:"إدارة", heroTitle2:"الحجم الساعي",
-    heroSub:"منصة مركزية لتنظيم وتوزيع ومتابعة ساعات التدريس في قسم الإعلاميات.",
-    aboutTitle:"أداة مصممة لقسم الإعلاميات",
-    aboutBody:"يحل هذا النظام محل الإدارة اليدوية للحجم الساعي بحل رقمي عادل وشفاف. يغطي إدارة التخصصات وتعيين الأساتذة والإحصاءات والتنبؤ بالأعباء المستقبلية.",
-    rolesTitle:"ثلاثة أدوار، ثلاثة تجارب",
-    installApp:"تثبيت التطبيق", installDesc:"يعمل بدون إنترنت",
-  },
-  en: {
-    dir:"ltr", flag:"🇬🇧",
-    app:"TeachLoad", sub:"CS Department — FSM Meknès",
-    login:"Login", user:"Username", pass:"Password", loginBtn:"Access Dashboard",
-    nav:{ dash:"Dashboard", fil:"Programs", ens:"Teachers", crs:"Courses", rep:"Distribution", stat:"Statistics", prev:"Forecasts" },
-    logout:"Logout", welcome:"Welcome", admin:"Administrator", search:"Search...",
-    add:"Add", edit:"Edit", del:"Delete", save:"Save", cancel:"Cancel", close:"Close",
-    totalVH:"Total Teaching Hours", totalEns:"Total Teachers", totalFil:"Total Programs",
-    moyVH:"Avg Hours / Teacher", totalCrs:"Total Courses", heures:"hours",
-    cm:"Lectures", td:"Tutorial Sessions", tp:"Lab Sessions",
-    nom:"Last Name", prenom:"First Name", email:"Email", spec:"Specialty", niveau:"Level",
-    semestre:"Semester", desc:"Description", type:"Type", ens_label:"Teacher",
-    fil_label:"Program", heures_label:"Hours", intitule:"Title",
-    vhTotal:"Total Hours", vhAssigne:"Assigned Hours", charge:"Load",
-    vhParEns:"Hours per Teacher", vhParFil:"Hours per Program", repartTypes:"Distribution by Type",
-    prevTitle:"Next Year Forecasts", basedOn:"Based on current data",
-    growth:"Growth Rate (%)", generate:"Generate Forecast",
-    prevTot:"Projected Total Hours", prevNb:"Required Teachers", prevMoy:"Projected Average",
-    repTitle:"Teaching Hours Distribution", affecte:"Assigned", libre:"Available",
-    statDept:"Department Statistics", synthese:"Summary",
-    newFil:"New Program", newEns:"New Teacher", newCrs:"New Course",
-    actions:"Actions", details:"Details", confirmDel:"Confirm deletion?",
-    enterApp:"Access Application", learnMore:"Learn More",
-    heroTitle1:"Teaching Load", heroTitle2:"Management",
-    heroSub:"A centralized platform to organize, distribute and track teaching hours across the Computer Science Department.",
-    aboutTitle:"Built for the CS Department",
-    aboutBody:"This system replaces manual hour management with a fair and transparent digital solution. It covers program management, teacher assignment, statistics and future load forecasting.",
-    rolesTitle:"Three roles, three experiences",
-    installApp:"Install App", installDesc:"Works offline",
-  }
-};
-
-// ── Initial Data ──────────────────────────────────────────────────────────────
-const INIT = {
+<script>
+// ═══════════════════════════════════════
+//  DATA & STATE
+// ═══════════════════════════════════════
+const INIT={
   filieres:[
-    {id:1,nom:"Licence Informatique",niveau:"L3",semestre:"S5-S6",desc:"Licence fondamentale en informatique"},
-    {id:2,nom:"Master IA",niveau:"M1",semestre:"S1-S2",desc:"Master Intelligence Artificielle"},
-    {id:3,nom:"DUT Réseaux",niveau:"DUT",semestre:"S3-S4",desc:"DUT Réseaux et Télécommunications"},
+    {id:1,nom:"Licence Informatique",niveau:"L3",semestre:"S5-S6",desc:"Licence fondamentale"},
+    {id:2,nom:"Master IA",niveau:"M1",semestre:"S1-S2",desc:"Intelligence Artificielle"},
+    {id:3,nom:"DUT Réseaux",niveau:"DUT",semestre:"S3-S4",desc:"Réseaux & Télécom"},
     {id:4,nom:"Licence Data Science",niveau:"L3",semestre:"S5-S6",desc:"Data Science appliquée"},
   ],
   enseignants:[
-    {id:1,nom:"Benali",prenom:"Ahmed",email:"a.benali@univ.ma",spec:"Algorithmique",vhTotal:192,vhAssigne:168},
-    {id:2,nom:"El Idrissi",prenom:"Fatima",email:"f.elidrissi@univ.ma",spec:"Base de données",vhTotal:192,vhAssigne:144},
-    {id:3,nom:"Ouali",prenom:"Karim",email:"k.ouali@univ.ma",spec:"Réseaux",vhTotal:192,vhAssigne:192},
-    {id:4,nom:"Tazi",prenom:"Sara",email:"s.tazi@univ.ma",spec:"IA & ML",vhTotal:192,vhAssigne:120},
-    {id:5,nom:"Moussaoui",prenom:"Rachid",email:"r.moussaoui@univ.ma",spec:"Sécurité",vhTotal:192,vhAssigne:160},
+    {id:1,nom:"El Amrani",prenom:"Hassan",email:"h.elamrani@univ.ma",spec:"Algorithmique",vhTotal:192,vhAssigne:192},
+    {id:2,nom:"Benali",prenom:"Fatima",email:"f.benali@univ.ma",spec:"Base de données",vhTotal:192,vhAssigne:168},
+    {id:3,nom:"Khalidi",prenom:"Youssef",email:"y.khalidi@univ.ma",spec:"Réseaux",vhTotal:192,vhAssigne:150},
+    {id:4,nom:"Zahraoui",prenom:"Sara",email:"s.zahraoui@univ.ma",spec:"IA & ML",vhTotal:192,vhAssigne:144},
+    {id:5,nom:"Moussaoui",prenom:"Rachid",email:"r.moussaoui@univ.ma",spec:"Sécurité",vhTotal:192,vhAssigne:136},
   ],
   cours:[
-    {id:1,intitule:"Algorithmique Avancée",filId:1,type:"CM",heures:30,ensId:1},
+    {id:1,intitule:"Algorithmique Avancée",filId:1,type:"CM",heures:32,ensId:1},
     {id:2,intitule:"TP Algorithmique",filId:1,type:"TP",heures:20,ensId:1},
     {id:3,intitule:"TD Algorithmique",filId:1,type:"TD",heures:18,ensId:1},
     {id:4,intitule:"Base de données",filId:1,type:"CM",heures:28,ensId:2},
     {id:5,intitule:"TP BDD",filId:1,type:"TP",heures:24,ensId:2},
     {id:6,intitule:"Réseaux I",filId:3,type:"CM",heures:32,ensId:3},
     {id:7,intitule:"TP Réseaux",filId:3,type:"TP",heures:30,ensId:3},
-    {id:8,intitule:"TD Réseaux",filId:3,type:"TD",heures:20,ensId:3},
-    {id:9,intitule:"Machine Learning",filId:2,type:"CM",heures:36,ensId:4},
-    {id:10,intitule:"TP ML",filId:2,type:"TP",heures:24,ensId:4},
-    {id:11,intitule:"Deep Learning",filId:2,type:"CM",heures:32,ensId:4},
+    {id:8,intitule:"Machine Learning",filId:2,type:"CM",heures:36,ensId:4},
+    {id:9,intitule:"Deep Learning",filId:2,type:"CM",heures:28,ensId:4},
+    {id:10,intitule:"Cryptographie",filId:4,type:"CM",heures:24,ensId:5},
+    {id:11,intitule:"Sécurité Réseaux",filId:3,type:"CM",heures:28,ensId:5},
     {id:12,intitule:"Data Visualisation",filId:4,type:"CM",heures:24,ensId:2},
-    {id:13,intitule:"Sécurité Réseaux",filId:3,type:"CM",heures:28,ensId:5},
-    {id:14,intitule:"Cryptographie",filId:4,type:"CM",heures:20,ensId:5},
-    {id:15,intitule:"TP Cryptographie",filId:4,type:"TP",heures:16,ensId:5},
+    {id:13,intitule:"TP ML",filId:2,type:"TP",heures:20,ensId:4},
+    {id:14,intitule:"TP Cryptographie",filId:4,type:"TP",heures:16,ensId:5},
   ]
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const COLORS = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#06b6d4"];
-const NAV_ICONS = { dash:"🏠", fil:"🎓", ens:"👨‍🏫", crs:"📚", rep:"📊", stat:"📈", prev:"🔮" };
-
-function Badge({ color, children }) {
-  return <span className="badge" style={{ background: color+'22', color }}>{children}</span>;
+const KEY="gvh3";
+function loadInitData(){
+  try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):JSON.parse(JSON.stringify(INIT));}
+  catch(e){return JSON.parse(JSON.stringify(INIT));}
 }
+let S={
+  view:"landing",nav:"dash",user:null,prevRate:10,
+  data:loadInitData()
+};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S.data));}catch(e){}};
+const setView=v=>{S.view=v;render();};
+const setNav=n=>{S.nav=n;render();};
 
-function Modal({ title, onClose, children }) {
-  return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box">
-        <div className="modal-header">
-          <span className="modal-title">{title}</span>
-          <button className="btn btn-dark btn-sm" onClick={onClose}>✕</button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
+const USERS=[
+  {u:"admin",p:"admin123",role:"admin",name:"Administrateur"},
+  {u:"chef",p:"chef123",role:"chef",name:"Chef de Dépt."},
+  {u:"prof1",p:"prof123",role:"enseignant",name:"El Amrani Hassan",ensId:1},
+  {u:"prof2",p:"prof123",role:"enseignant",name:"Benali Fatima",ensId:2},
+];
+const canEdit=()=>S.user&&(S.user.role==="admin"||S.user.role==="chef");
 
-function StatCard({ label, value, icon, color="#3b82f6", sub }) {
-  return (
-    <div className="stat-card">
-      <div className="stat-icon" style={{ background: color+'18', border: `1px solid ${color}33` }}>{icon}</div>
-      <div>
-        <div className="stat-lbl2">{label}</div>
-        <div className="stat-val">{value}</div>
-        {sub && <div className="stat-sub2">{sub}</div>}
-      </div>
-    </div>
-  );
-}
+// ═══════════════════════════════════════
+//  LANDING
+// ═══════════════════════════════════════
+function renderLanding(){
+  const d=S.data;
+  const totalVH=d.cours.reduce((s,c)=>s+c.heures,0);
+  const cmH=d.cours.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0);
+  const tdH=d.cours.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0);
+  const tpH=d.cours.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0);
+  const max=Math.max(...d.enseignants.map(e=>e.vhAssigne));
+  const bars=d.enseignants.map((e,i)=>{
+    const h=Math.round((e.vhAssigne/max)*50);
+    const cols=["#3b82f6","#6366f1","#8b5cf6","#06b6d4","#10b981"];
+    return`<div class="bar-item" style="--h:${h}px;height:${h}px;background:${cols[i%5]};animation-delay:${i*.15}s" title="${e.nom}: ${e.vhAssigne}h"></div>`;
+  }).join("");
 
-// ── Landing Page ──────────────────────────────────────────────────────────────
-function LandingPage({ t, lang, setLang, onEnter }) {
-  const features = [
-    { icon:"🎓", title: lang==='ar'?"الفلارات والمقررات":"Filières & Cours", desc: lang==='ar'?"إدارة التخصصات والمقررات وأنواع الحصص (محاضرات، أعمال موجهة، أعمال تطبيقية)":"Gérer les filières, modules et types de séances (CM, TD, TP) avec un CRUD complet." },
-    { icon:"👨‍🏫", title: lang==='ar'?"الأساتذة والأماكن":"Enseignants & Locaux", desc: lang==='ar'?"تسجيل الأساتذة وتعيينهم للمقررات وإدارة الأماكن":"Enregistrer les enseignants, les affecter aux cours et gérer les salles disponibles." },
-    { icon:"📊", title: lang==='ar'?"التوزيع الساعي":"Répartition horaire", desc: lang==='ar'?"توزيع تلقائي وعادل للحجم الساعي مع تصورات بيانية":"Répartition automatique et équitable des heures, avec comparaisons visuelles." },
-    { icon:"📈", title: lang==='ar'?"الإحصاءات":"Statistiques", desc: lang==='ar'?"عرض الحجم الساعي الإجمالي والتفصيلي لكل أستاذ وتخصص":"Visualiser les volumes horaires globaux, par enseignant, par filière, avec graphiques." },
-    { icon:"🔮", title: lang==='ar'?"التوقعات":"Prévisions", desc: lang==='ar'?"توليد توقعات للسنة القادمة بناءً على معدل النمو":"Générer des prévisions pour l'année suivante avec taux de croissance paramétrable." },
-    { icon:"🌐", title: lang==='ar'?"متعدد اللغات":"Multilingue", desc: lang==='ar'?"دعم كامل للعربية (RTL) والفرنسية والإنجليزية":"Support complet FR / AR (RTL) / EN avec basculement instantané." },
+  const navItems=[
+    {icon:"🏠",label:"Accueil"},
+    {icon:"📊",label:"Tableau de bord"},
+    {icon:"🎓",label:"Filières"},
+    {icon:"📚",label:"Cours / Modules"},
+    {icon:"👨‍🏫",label:"Enseignants"},
+    {icon:"🔗",label:"Affectations"},
+    {icon:"🏛️",label:"Locaux"},
+    {icon:"⏱️",label:"Volumes horaires"},
+    {icon:"📋",label:"Répartition"},
+    {icon:"🔮",label:"Prévisions"},
+    {icon:"📈",label:"Statistiques"},
+    {icon:"📄",label:"Rapports"},
+    {icon:"⚙️",label:"Paramètres"},
   ];
-  const roles = [
-    { badge:"Administrateur", color:"#3b82f6", items: lang==='ar'?["إدارة المستخدمين","تكوين النظام","صلاحية الوصول الكاملة"]:["Gérer les utilisateurs","Configurer le système","Accès total"] },
-    { badge: lang==='ar'?"رئيس القسم":"Chef de Dépt.", color:"#f59e0b", items: lang==='ar'?["إدارة التخصصات والمقررات","مراقبة التوزيع","الموافقة على المقررات"]:["Gérer filières et cours","Superviser répartitions","Valider les affectations"] },
-    { badge: lang==='ar'?"الأستاذ":"Enseignant", color:"#10b981", items: lang==='ar'?["عرض المقررات الخاصة","متابعة الحجم الساعي","عرض التوقعات"]:["Voir ses cours affectés","Consulter son volume","Voir ses prévisions"] },
-  ];
-  return (
-    <div className="landing" dir={t.dir}>
-      {/* Hero */}
-      <section className="hero">
-        <nav className="nav-bar">
-          <div className="nav-logo">{t.app}</div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            {["fr","ar","en"].map(l => (
-              <button key={l} onClick={() => setLang(l)}
-                style={{ background: lang===l ? 'var(--gold)' : 'var(--bg2)', color: lang===l ? '#0f172a' : 'var(--text2)', border: '1px solid var(--border)', borderRadius:6, padding:'4px 10px', fontSize:12, cursor:'pointer', fontWeight: lang===l?700:400, fontFamily:"'DM Sans',sans-serif" }}>
-                {T[l].flag} {l.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </nav>
 
-        {/* Floating decorations */}
-        <div className="float-card c1">
-          <div style={{ fontSize:11, color:'var(--text2)', marginBottom:4 }}>Volume Total</div>
-          <div style={{ fontSize:22, fontWeight:700, color:'var(--gold)' }}>786h</div>
-          <div style={{ fontSize:11, color:'var(--green)' }}>↑ 12% cette année</div>
-        </div>
-        <div className="float-card c2">
-          <div style={{ fontSize:11, color:'var(--text2)', marginBottom:6 }}>Enseignants</div>
-          <div style={{ display:'flex', gap:4 }}>
-            {['AB','FE','KO','ST','RM'].map(n => (
-              <div key={n} style={{ width:24, height:24, borderRadius:'50%', background:'var(--bg3)', border:'1px solid var(--border)', fontSize:9, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text2)' }}>{n}</div>
-            ))}
-          </div>
-        </div>
-        <div className="float-card c3">
-          <div style={{ fontSize:11, color:'var(--text2)', marginBottom:4 }}>CM / TD / TP</div>
-          <div style={{ display:'flex', gap:6 }}>
-            <span style={{ fontSize:14, fontWeight:700, color:'#3b82f6' }}>290h</span>
-            <span style={{ fontSize:14, fontWeight:700, color:'#10b981' }}>242h</span>
-            <span style={{ fontSize:14, fontWeight:700, color:'#f59e0b' }}>254h</span>
-          </div>
-        </div>
-
-        <div className="hero-content">
-          <div className="hero-tag">Faculté des Sciences — Université Moulay Ismail, Meknès</div>
-          <h1 className="hero-title">{t.heroTitle1} <span>{t.heroTitle2}</span></h1>
-          <p className="hero-sub">{t.heroSub}</p>
-          <div className="hero-btns">
-            <button className="btn-primary" onClick={onEnter}>{t.enterApp} →</button>
-            <a href="#about" className="btn-ghost">{t.learnMore}</a>
-          </div>
-          <div className="stack-row">
-            {["React","localStorage","PWA","GitHub Pages"].map(s => (
-              <span key={s} className="stack-chip">{s}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* About */}
-      <section className="section" id="about" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)' }}>
-        <div className="section-inner" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'4rem', alignItems:'center' }}>
-          <div>
-            <div className="section-tag">À PROPOS</div>
-            <h2 className="section-title">{t.aboutTitle}</h2>
-            <p className="section-body">{t.aboutBody}</p>
-            <div className="stats-row">
-              <div className="stat-item"><div className="stat-num">3</div><div className="stat-lbl">{lang==='ar'?"أدوار":"Rôles"}</div></div>
-              <div className="stat-item"><div className="stat-num">5</div><div className="stat-lbl">{lang==='ar'?"وحدات":"Modules"}</div></div>
-              <div className="stat-item"><div className="stat-num">1</div><div className="stat-lbl">{lang==='ar'?"قسم":"Département"}</div></div>
-            </div>
-          </div>
-          <div style={{ background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:16, padding:'1.5rem' }}>
-            <div style={{ marginBottom:'1rem', fontSize:13, color:'var(--text2)' }}>Aperçu du tableau de bord</div>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-              {[{l:"Volume Total",v:"786h",c:"#3b82f6"},{l:"Enseignants",v:"5",c:"#10b981"},{l:"Filières",v:"4",c:"#8b5cf6"},{l:"Moyenne",v:"157h",c:"#f59e0b"}].map(s=>(
-                <div key={s.l} style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:10, padding:'0.75rem' }}>
-                  <div style={{ fontSize:10, color:'var(--text2)', marginBottom:4 }}>{s.l}</div>
-                  <div style={{ fontSize:20, fontWeight:700, color:s.c }}>{s.v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="section">
-        <div className="section-inner">
-          <div className="section-tag" style={{ textAlign:'center' }}>{lang==='ar'?"المميزات":"FONCTIONNALITÉS"}</div>
-          <h2 className="section-title" style={{ textAlign:'center' }}>{lang==='ar'?"ما يتيحه التطبيق":"Ce que l'application permet"}</h2>
-          <div className="features-grid">
-            {features.map((f,i) => (
-              <div key={i} className="feature-card">
-                <div className="feature-icon">{f.icon}</div>
-                <div className="feature-title">{f.title}</div>
-                <div className="feature-desc">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Roles */}
-      <section className="section" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)' }}>
-        <div className="section-inner">
-          <div className="section-tag" style={{ textAlign:'center' }}>{lang==='ar'?"الوصول":"ACCÈS"}</div>
-          <h2 className="section-title" style={{ textAlign:'center' }}>{t.rolesTitle}</h2>
-          <div className="roles-grid">
-            {roles.map((r,i) => (
-              <div key={i} className="role-card">
-                <span className="role-badge" style={{ background:r.color+'22', color:r.color }}>{r.badge}</span>
-                <ul className="role-list">{r.items.map((item,j) => <li key={j}>{item}</li>)}</ul>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <div className="cta-section">
-        <div className="section-tag">COMMENCER</div>
-        <h2 className="section-title">{lang==='ar'?"مستعد للبدء؟":"Prêt à commencer ?"}</h2>
-        <button className="btn-primary" onClick={onEnter} style={{ marginTop:'1.5rem' }}>{t.enterApp} →</button>
+  document.getElementById("app").innerHTML=`
+  <div class="landing-wrap">
+    <aside class="l-sidebar">
+      <div class="ls-logo">
+        <div class="ls-logo-icon">🎓</div>
+        <div class="ls-logo-name">Dept. Informatique</div>
+        <div class="ls-logo-sub">Gestion des Enseignements</div>
       </div>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div>Gestion Volume Horaire — Faculté des Sciences, Université Moulay Ismail, Meknès</div>
-        <div style={{ marginTop:4, color:'var(--border)' }}>Année académique 2025–2026 · FSM</div>
-      </footer>
-    </div>
-  );
-}
-
-// ── Login ─────────────────────────────────────────────────────────────────────
-function Login({ t, lang, setLang, onLogin }) {
-  const [u,setU] = useState(""); const [p,setP] = useState("");
-  return (
-    <div className="login-wrap" dir={t.dir}>
-      <div className="login-box">
-        <div style={{ textAlign:'center', marginBottom:'1.75rem' }}>
-          <div style={{ fontSize:36, marginBottom:10 }}>🎓</div>
-          <div className="login-title">{t.app}</div>
-          <div className="login-sub">{t.sub}</div>
-        </div>
-        <div className="form-grid">
-          <div><label className="form-label">{t.user}</label><input className="form-input" value={u} onChange={e=>setU(e.target.value)} placeholder="admin" /></div>
-          <div><label className="form-label">{t.pass}</label><input className="form-input" type="password" value={p} onChange={e=>setP(e.target.value)} placeholder="••••••" /></div>
-          <button className="btn-primary" style={{ width:'100%', justifyContent:'center', marginTop:8 }} onClick={onLogin}>{t.loginBtn}</button>
-        </div>
-        <div style={{ display:'flex', justifyContent:'center', gap:8, marginTop:16 }}>
-          {["fr","ar","en"].map(l => (
-            <button key={l} onClick={()=>setLang(l)} className="btn btn-dark btn-sm" style={{ background: lang===l?'var(--gold)':'var(--bg3)', color: lang===l?'#0f172a':'var(--text2)', fontWeight: lang===l?700:400 }}>
-              {T[l].flag} {l.toUpperCase()}
-            </button>
-          ))}
-        </div>
-        <div style={{ marginTop:16, textAlign:'center', fontSize:12, color:'var(--text2)' }}>
-          Hint: any username / password
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Sidebar + Topbar ──────────────────────────────────────────────────────────
-function Sidebar({ t, active, setActive, open }) {
-  return (
-    <div className={`sidebar ${open?'':'closed'}`}>
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-name">{t.app}</div>
-        <div className="sidebar-logo-sub">{t.sub}</div>
-      </div>
-      <nav className="sidebar-nav">
-        {Object.entries(t.nav).map(([key,label]) => (
-          <button key={key} className={`nav-item ${active===key?'active':''}`} onClick={()=>setActive(key)}>
-            <span className="nav-icon">{NAV_ICONS[key]}</span>{label}
-          </button>
-        ))}
+      <nav class="ls-nav">
+        ${navItems.map((n,i)=>`<a class="ln-item${i===0?" active":""}" href="javascript:void(0)" onclick="${i<2?"setView('login')":""}">
+          <span class="ln-icon">${n.icon}</span>${n.label}
+        </a>`).join("")}
       </nav>
-    </div>
-  );
-}
-
-function Topbar({ t, lang, setLang, onLogout, toggleSidebar }) {
-  return (
-    <div className="topbar">
-      <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-        <button className="btn btn-dark" style={{ padding:'6px 10px' }} onClick={toggleSidebar}>☰</button>
-        <span style={{ fontSize:13, color:'var(--text2)' }}>{t.welcome}, <strong style={{ color:'var(--gold)' }}>{t.admin}</strong></span>
+      <div class="ls-year">
+        <div class="ls-year-lbl">Année universitaire</div>
+        <div class="ls-year-val">2024 - 2025 ▾</div>
       </div>
-      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-        {["fr","ar","en"].map(l => (
-          <button key={l} onClick={()=>setLang(l)} className="btn btn-sm" style={{ background: lang===l?'var(--gold)':'var(--bg3)', color: lang===l?'#0f172a':'var(--text2)', border:'1px solid var(--border)' }}>
-            {T[l].flag}
-          </button>
-        ))}
-        <button className="btn btn-red btn-sm" style={{ marginLeft:4 }} onClick={onLogout}>🚪 {t.logout}</button>
-      </div>
-    </div>
-  );
-}
-
-// ── Dashboard ─────────────────────────────────────────────────────────────────
-function DashboardView({ t, data }) {
-  const { filieres, enseignants, cours } = data;
-  const totalVH = cours.reduce((s,c)=>s+c.heures,0);
-  const moyVH = Math.round(totalVH/enseignants.length);
-  const cmH = cours.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0);
-  const tdH = cours.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0);
-  const tpH = cours.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0);
-  const ensData = enseignants.map(e=>({ name:`${e.prenom[0]}.${e.nom}`, vh: cours.filter(c=>c.ensId===e.id).reduce((s,c)=>s+c.heures,0) }));
-  const filData = filieres.map(f=>({ name:f.nom.slice(0,14)+"…", vh:cours.filter(c=>c.filId===f.id).reduce((s,c)=>s+c.heures,0) }));
-  const typeData=[{name:t.cm,value:cmH,color:"#3b82f6"},{name:t.td,value:tdH,color:"#10b981"},{name:t.tp,value:tpH,color:"#f59e0b"}];
-
-  return (
-    <div>
-      <h2 style={{ margin:'0 0 1.25rem', fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.nav.dash}</h2>
-      <div className="grid-auto" style={{ marginBottom:16 }}>
-        <StatCard label={t.totalVH} value={`${totalVH}h`} icon="⏱️" color="#3b82f6" sub={`${cours.length} ${t.totalCrs}`} />
-        <StatCard label={t.totalEns} value={enseignants.length} icon="👨‍🏫" color="#10b981" />
-        <StatCard label={t.totalFil} value={filieres.length} icon="🎓" color="#8b5cf6" />
-        <StatCard label={t.moyVH} value={`${moyVH}h`} icon="📊" color="#f59e0b" />
-        <StatCard label={t.cm} value={`${cmH}h`} icon="📖" color="#3b82f6" />
-        <StatCard label={t.td} value={`${tdH}h`} icon="✏️" color="#10b981" />
-        <StatCard label={t.tp} value={`${tpH}h`} icon="🔬" color="#ef4444" />
-      </div>
-      <div className="grid-2">
-        <div className="card">
-          <h3 style={{ margin:'0 0 .75rem', fontSize:13, fontWeight:600, color:'var(--text2)' }}>{t.vhParEns}</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={ensData} layout="vertical">
-              <XAxis type="number" tick={{ fontSize:11, fill:'#94a3b8' }} />
-              <YAxis dataKey="name" type="category" width={65} tick={{ fontSize:11, fill:'#94a3b8' }} />
-              <Tooltip contentStyle={{ background:'#1e293b', border:'1px solid #334155', borderRadius:8, color:'#f1f5f9' }} formatter={v=>`${v}h`} />
-              <Bar dataKey="vh" fill="#f59e0b" radius={[0,4,4,0]} />
-            </BarChart>
-          </ResponsiveContainer>
+    </aside>
+    <div class="l-main">
+      <div class="l-topbar">
+        <div class="tb-icon-btn" title="Aide">❓</div>
+        <div class="tb-icon-btn" title="Notifications" style="position:relative">
+          🔔<span style="position:absolute;top:2px;right:2px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid white"></span>
         </div>
-        <div className="card">
-          <h3 style={{ margin:'0 0 .75rem', fontSize:13, fontWeight:600, color:'var(--text2)' }}>{t.repartTypes}</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie data={typeData} cx="50%" cy="50%" outerRadius={75} dataKey="value" label={({name,value})=>`${value}h`}>
-                {typeData.map((e,i)=><Cell key={i} fill={e.color}/>)}
-              </Pie>
-              <Tooltip contentStyle={{ background:'#1e293b', border:'1px solid #334155', borderRadius:8, color:'#f1f5f9' }} formatter={v=>`${v}h`} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:4, flexWrap:'wrap' }}>
-            {typeData.map(d=>(
-              <span key={d.name} style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--text2)' }}>
-                <span style={{ width:8, height:8, borderRadius:2, background:d.color, display:'inline-block' }}></span>
-                {d.name} ({d.value}h)
-              </span>
-            ))}
-          </div>
-        </div>
+        <button class="btn-connect" onclick="setView('login')">👤 Connexion</button>
       </div>
-    </div>
-  );
-}
-
-// ── Filières ──────────────────────────────────────────────────────────────────
-function FilieresView({ t, data, setData }) {
-  const [modal,setModal]=useState(null);
-  const [form,setForm]=useState({nom:"",niveau:"L3",semestre:"S1-S2",desc:""});
-  const [search,setSearch]=useState("");
-  const filtered=data.filieres.filter(f=>f.nom.toLowerCase().includes(search.toLowerCase()));
-  const openAdd=()=>{ setForm({nom:"",niveau:"L3",semestre:"S1-S2",desc:""}); setModal({mode:"add"}); };
-  const openEdit=(f)=>{ setForm({nom:f.nom,niveau:f.niveau,semestre:f.semestre,desc:f.desc}); setModal({mode:"edit",item:f}); };
-  const save=()=>{
-    if(modal.mode==="add") setData(d=>({...d,filieres:[...d.filieres,{...form,id:Date.now()}]}));
-    else setData(d=>({...d,filieres:d.filieres.map(f=>f.id===modal.item.id?{...f,...form}:f)}));
-    setModal(null);
-  };
-  const del=(id)=>{ if(window.confirm(t.confirmDel)) setData(d=>({...d,filieres:d.filieres.filter(f=>f.id!==id)})); };
-  const niveaux=["L1","L2","L3","M1","M2","DUT","BTS","Licence Pro"];
-  const semestres=["S1","S2","S1-S2","S3-S4","S5-S6","S7-S8"];
-
-  return (
-    <div>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem', flexWrap:'wrap', gap:8 }}>
-        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.nav.fil}</h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <input className="form-input" style={{ width:200 }} placeholder={t.search} value={search} onChange={e=>setSearch(e.target.value)} />
-          <button className="btn btn-gold" onClick={openAdd}>＋ {t.newFil}</button>
-        </div>
-      </div>
-      <div className="card table-wrap">
-        <table>
-          <thead><tr>{[t.nom,t.niveau,t.semestre,t.desc,t.actions].map(h=><th key={h}>{h}</th>)}</tr></thead>
-          <tbody>
-            {filtered.map(f=>(
-              <tr key={f.id}>
-                <td style={{ fontWeight:600 }}>{f.nom}</td>
-                <td><Badge color="#3b82f6">{f.niveau}</Badge></td>
-                <td><Badge color="#10b981">{f.semestre}</Badge></td>
-                <td style={{ color:'var(--text2)', maxWidth:200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.desc}</td>
-                <td>
-                  <div style={{ display:'flex', gap:4 }}>
-                    <button className="btn btn-dark btn-sm" onClick={()=>openEdit(f)}>✏️</button>
-                    <button className="btn btn-red btn-sm" onClick={()=>del(f.id)}>🗑️</button>
+      <div class="hero-split">
+        <!-- LEFT: animated dashboard illustration -->
+        <div class="hero-left">
+          <div class="mock-wrap">
+            <div class="mock-screen">
+              <div class="mock-hdr">
+                <span style="width:8px;height:8px;border-radius:50%;background:#ef4444;display:inline-block"></span>
+                <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;margin:0 4px"></span>
+                <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;margin-right:8px"></span>
+                <span class="mock-title">Tableau de bord</span>
+              </div>
+              <div class="mock-stat-row">
+                <div class="msc"><div class="msc-icon">📊</div><div class="msc-val">${totalVH}h</div><div class="msc-lbl">Volume global</div></div>
+                <div class="msc"><div class="msc-icon">👨‍🏫</div><div class="msc-val">${d.enseignants.length}</div><div class="msc-lbl">Enseignants</div></div>
+                <div class="msc"><div class="msc-icon">🎓</div><div class="msc-val">${d.filieres.length}</div><div class="msc-lbl">Filières</div></div>
+                <div class="msc"><div class="msc-icon">📚</div><div class="msc-val">${d.cours.length}</div><div class="msc-lbl">Modules</div></div>
+              </div>
+              <div class="mock-charts">
+                <div class="mc-box">
+                  <div class="mc-lbl">Répartition par type</div>
+                  <svg viewBox="0 0 60 60" width="70" style="display:block;margin:0 auto">
+                    <circle cx="30" cy="30" r="22" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+                    <circle cx="30" cy="30" r="22" fill="none" stroke="#3b82f6" stroke-width="8" stroke-dasharray="${(cmH/totalVH)*138.2} 138.2" stroke-dashoffset="0" transform="rotate(-90 30 30)"/>
+                    <circle cx="30" cy="30" r="22" fill="none" stroke="#10b981" stroke-width="8" stroke-dasharray="${(tdH/totalVH)*138.2} 138.2" stroke-dashoffset="${-(cmH/totalVH)*138.2}" transform="rotate(-90 30 30)"/>
+                    <circle cx="30" cy="30" r="22" fill="none" stroke="#f59e0b" stroke-width="8" stroke-dasharray="${(tpH/totalVH)*138.2} 138.2" stroke-dashoffset="${-((cmH+tdH)/totalVH)*138.2}" transform="rotate(-90 30 30)"/>
+                    <text x="30" y="27" text-anchor="middle" font-size="6" font-weight="700" fill="#0f172a">${totalVH}h</text>
+                    <text x="30" y="35" text-anchor="middle" font-size="5" fill="#64748b">total</text>
+                  </svg>
+                </div>
+                <div class="mc-box">
+                  <div class="mc-lbl">Volume par enseignant</div>
+                  <div class="bar-row">${bars}</div>
+                  <div style="display:flex;justify-content:space-around;margin-top:3px">
+                    ${d.enseignants.map(e=>`<span style="font-size:6px;color:#94a3b8">${e.nom.substring(0,4)}</span>`).join("")}
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {modal && (
-        <Modal title={modal.mode==="add"?t.newFil:t.edit} onClose={()=>setModal(null)}>
-          <div className="form-grid">
-            <div><label className="form-label">{t.nom}</label><input className="form-input" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} /></div>
-            <div className="form-row">
-              <div><label className="form-label">{t.niveau}</label>
-                <select className="form-input" value={form.niveau} onChange={e=>setForm({...form,niveau:e.target.value})}>
-                  {niveaux.map(n=><option key={n}>{n}</option>)}
-                </select>
-              </div>
-              <div><label className="form-label">{t.semestre}</label>
-                <select className="form-input" value={form.semestre} onChange={e=>setForm({...form,semestre:e.target.value})}>
-                  {semestres.map(s=><option key={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
-            <div><label className="form-label">{t.desc}</label><input className="form-input" value={form.desc} onChange={e=>setForm({...form,desc:e.target.value})} /></div>
-            <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
-              <button className="btn btn-dark" onClick={()=>setModal(null)}>{t.cancel}</button>
-              <button className="btn btn-gold" onClick={save}>{t.save}</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-// ── Enseignants ───────────────────────────────────────────────────────────────
-function EnseignantsView({ t, data, setData }) {
-  const [modal,setModal]=useState(null);
-  const [form,setForm]=useState({nom:"",prenom:"",email:"",spec:"",vhTotal:192,vhAssigne:0});
-  const [search,setSearch]=useState("");
-  const filtered=data.enseignants.filter(e=>`${e.nom} ${e.prenom}`.toLowerCase().includes(search.toLowerCase()));
-  const getVH=(id)=>data.cours.filter(c=>c.ensId===id).reduce((s,c)=>s+c.heures,0);
-  const openAdd=()=>{ setForm({nom:"",prenom:"",email:"",spec:"",vhTotal:192,vhAssigne:0}); setModal({mode:"add"}); };
-  const openEdit=(e)=>{ setForm({nom:e.nom,prenom:e.prenom,email:e.email,spec:e.spec,vhTotal:e.vhTotal,vhAssigne:e.vhAssigne}); setModal({mode:"edit",item:e}); };
-  const save=()=>{
-    if(modal.mode==="add") setData(d=>({...d,enseignants:[...d.enseignants,{...form,id:Date.now()}]}));
-    else setData(d=>({...d,enseignants:d.enseignants.map(e=>e.id===modal.item.id?{...e,...form}:e)}));
-    setModal(null);
-  };
-  const del=(id)=>{ if(window.confirm(t.confirmDel)) setData(d=>({...d,enseignants:d.enseignants.filter(e=>e.id!==id)})); };
-
-  return (
-    <div>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem', flexWrap:'wrap', gap:8 }}>
-        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.nav.ens}</h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <input className="form-input" style={{ width:200 }} placeholder={t.search} value={search} onChange={e=>setSearch(e.target.value)} />
-          <button className="btn btn-gold" onClick={openAdd}>＋ {t.newEns}</button>
-        </div>
-      </div>
-      <div className="card table-wrap">
-        <table>
-          <thead><tr>{[t.nom,t.prenom,t.spec,t.vhTotal,t.vhAssigne,t.charge,t.actions].map(h=><th key={h}>{h}</th>)}</tr></thead>
-          <tbody>
-            {filtered.map(e=>{
-              const vh=getVH(e.id); const pct=Math.round(vh/e.vhTotal*100);
-              return (
-                <tr key={e.id}>
-                  <td style={{ fontWeight:600 }}>{e.nom}</td>
-                  <td>{e.prenom}</td>
-                  <td><Badge color="#8b5cf6">{e.spec}</Badge></td>
-                  <td>{e.vhTotal}h</td>
-                  <td><Badge color={vh>=e.vhTotal?"#ef4444":"#10b981"}>{vh}h</Badge></td>
-                  <td style={{ minWidth:120 }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <div className="progress-bg" style={{ flex:1 }}><div className="progress-fill" style={{ width:`${pct}%`, background:pct>=100?"#ef4444":pct>70?"#f59e0b":"#10b981" }}></div></div>
-                      <span style={{ fontSize:11, color:'var(--text2)', minWidth:30 }}>{pct}%</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div style={{ display:'flex', gap:4 }}>
-                      <button className="btn btn-dark btn-sm" onClick={()=>openEdit(e)}>✏️</button>
-                      <button className="btn btn-red btn-sm" onClick={()=>del(e.id)}>🗑️</button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {modal && (
-        <Modal title={modal.mode==="add"?t.newEns:t.edit} onClose={()=>setModal(null)}>
-          <div className="form-grid">
-            <div className="form-row">
-              <div><label className="form-label">{t.nom}</label><input className="form-input" value={form.nom} onChange={e=>setForm({...form,nom:e.target.value})} /></div>
-              <div><label className="form-label">{t.prenom}</label><input className="form-input" value={form.prenom} onChange={e=>setForm({...form,prenom:e.target.value})} /></div>
-            </div>
-            <div><label className="form-label">{t.email}</label><input className="form-input" type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} /></div>
-            <div><label className="form-label">{t.spec}</label><input className="form-input" value={form.spec} onChange={e=>setForm({...form,spec:e.target.value})} /></div>
-            <div><label className="form-label">{t.vhTotal}</label><input className="form-input" type="number" value={form.vhTotal} onChange={e=>setForm({...form,vhTotal:+e.target.value})} /></div>
-            <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
-              <button className="btn btn-dark" onClick={()=>setModal(null)}>{t.cancel}</button>
-              <button className="btn btn-gold" onClick={save}>{t.save}</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-// ── Cours ─────────────────────────────────────────────────────────────────────
-function CoursView({ t, data, setData }) {
-  const [modal,setModal]=useState(null);
-  const [form,setForm]=useState({intitule:"",filId:1,type:"CM",heures:30,ensId:1});
-  const [search,setSearch]=useState("");
-  const filtered=data.cours.filter(c=>c.intitule.toLowerCase().includes(search.toLowerCase()));
-  const openAdd=()=>{ setForm({intitule:"",filId:data.filieres[0]?.id||1,type:"CM",heures:30,ensId:data.enseignants[0]?.id||1}); setModal({mode:"add"}); };
-  const openEdit=(c)=>{ setForm({intitule:c.intitule,filId:c.filId,type:c.type,heures:c.heures,ensId:c.ensId}); setModal({mode:"edit",item:c}); };
-  const save=()=>{
-    if(modal.mode==="add") setData(d=>({...d,cours:[...d.cours,{...form,id:Date.now()}]}));
-    else setData(d=>({...d,cours:d.cours.map(c=>c.id===modal.item.id?{...c,...form}:c)}));
-    setModal(null);
-  };
-  const del=(id)=>{ if(window.confirm(t.confirmDel)) setData(d=>({...d,cours:d.cours.filter(c=>c.id!==id)})); };
-  const typeColors={"CM":"#3b82f6","TD":"#10b981","TP":"#f59e0b"};
-
-  return (
-    <div>
-      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem', flexWrap:'wrap', gap:8 }}>
-        <h2 style={{ margin:0, fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.nav.crs}</h2>
-        <div style={{ display:'flex', gap:8 }}>
-          <input className="form-input" style={{ width:200 }} placeholder={t.search} value={search} onChange={e=>setSearch(e.target.value)} />
-          <button className="btn btn-gold" onClick={openAdd}>＋ {t.newCrs}</button>
-        </div>
-      </div>
-      <div className="card table-wrap">
-        <table>
-          <thead><tr>{[t.intitule,t.fil_label,t.type,t.heures_label,t.ens_label,t.actions].map(h=><th key={h}>{h}</th>)}</tr></thead>
-          <tbody>
-            {filtered.map(c=>{
-              const fil=data.filieres.find(f=>f.id===c.filId);
-              const ens=data.enseignants.find(e=>e.id===c.ensId);
-              return (
-                <tr key={c.id}>
-                  <td style={{ fontWeight:600 }}>{c.intitule}</td>
-                  <td style={{ color:'var(--text2)', fontSize:12 }}>{fil?.nom}</td>
-                  <td><Badge color={typeColors[c.type]||"#6b7280"}>{c.type}</Badge></td>
-                  <td><Badge color="#06b6d4">{c.heures}h</Badge></td>
-                  <td style={{ fontSize:12 }}>{ens?`${ens.prenom} ${ens.nom}`:"-"}</td>
-                  <td>
-                    <div style={{ display:'flex', gap:4 }}>
-                      <button className="btn btn-dark btn-sm" onClick={()=>openEdit(c)}>✏️</button>
-                      <button className="btn btn-red btn-sm" onClick={()=>del(c.id)}>🗑️</button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {modal && (
-        <Modal title={modal.mode==="add"?t.newCrs:t.edit} onClose={()=>setModal(null)}>
-          <div className="form-grid">
-            <div><label className="form-label">{t.intitule}</label><input className="form-input" value={form.intitule} onChange={e=>setForm({...form,intitule:e.target.value})} /></div>
-            <div className="form-row">
-              <div><label className="form-label">{t.fil_label}</label>
-                <select className="form-input" value={form.filId} onChange={e=>setForm({...form,filId:+e.target.value})}>
-                  {data.filieres.map(f=><option key={f.id} value={f.id}>{f.nom}</option>)}
-                </select>
-              </div>
-              <div><label className="form-label">{t.type}</label>
-                <select className="form-input" value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>
-                  {["CM","TD","TP"].map(tp=><option key={tp}>{tp}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="form-row">
-              <div><label className="form-label">{t.heures_label}</label><input className="form-input" type="number" value={form.heures} onChange={e=>setForm({...form,heures:+e.target.value})} /></div>
-              <div><label className="form-label">{t.ens_label}</label>
-                <select className="form-input" value={form.ensId} onChange={e=>setForm({...form,ensId:+e.target.value})}>
-                  {data.enseignants.map(e=><option key={e.id} value={e.id}>{e.prenom} {e.nom}</option>)}
-                </select>
-              </div>
-            </div>
-            <div style={{ display:'flex', justifyContent:'flex-end', gap:8 }}>
-              <button className="btn btn-dark" onClick={()=>setModal(null)}>{t.cancel}</button>
-              <button className="btn btn-gold" onClick={save}>{t.save}</button>
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
-
-// ── Répartition ───────────────────────────────────────────────────────────────
-function RepartitionView({ t, data }) {
-  return (
-    <div>
-      <h2 style={{ margin:'0 0 1.25rem', fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.repTitle}</h2>
-      <div style={{ display:'grid', gap:12 }}>
-        {data.enseignants.map(e=>{
-          const vh=data.cours.filter(c=>c.ensId===e.id).reduce((s,c)=>s+c.heures,0);
-          const pct=Math.round(vh/e.vhTotal*100);
-          const typeH=["CM","TD","TP"].map(tp=>({ tp, h:data.cours.filter(c=>c.ensId===e.id&&c.type===tp).reduce((s,c)=>s+c.heures,0) }));
-          const colors={"CM":"#3b82f6","TD":"#10b981","TP":"#f59e0b"};
-          return (
-            <div key={e.id} className="card">
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, flexWrap:'wrap', gap:8 }}>
-                <div>
-                  <div style={{ fontWeight:600, color:'var(--text)' }}>{e.prenom} {e.nom}</div>
-                  <div style={{ fontSize:12, color:'var(--text2)' }}>{e.spec}</div>
-                </div>
-                <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-                  {typeH.map(({tp,h})=><Badge key={tp} color={colors[tp]}>{tp}: {h}h</Badge>)}
-                  <Badge color={pct>=100?"#ef4444":pct>70?"#f59e0b":"#10b981"}>{vh}/{e.vhTotal}h</Badge>
                 </div>
               </div>
-              <div className="progress-bg"><div className="progress-fill" style={{ width:`${Math.min(pct,100)}%`, background:pct>=100?"#ef4444":pct>70?"#f59e0b":"#10b981" }}></div></div>
-              <div style={{ fontSize:11, color:'var(--text2)', marginTop:4 }}>{pct}% {t.charge}</div>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Statistiques ──────────────────────────────────────────────────────────────
-function StatistiquesView({ t, data }) {
-  const ensData=data.enseignants.map(e=>({ name:`${e.prenom[0]}.${e.nom}`, vh:data.cours.filter(c=>c.ensId===e.id).reduce((s,c)=>s+c.heures,0), max:e.vhTotal }));
-  const filData=data.filieres.map(f=>({ name:f.nom.slice(0,12)+"…", vh:data.cours.filter(c=>c.filId===f.id).reduce((s,c)=>s+c.heures,0) }));
-  return (
-    <div>
-      <h2 style={{ margin:'0 0 1.25rem', fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.statDept}</h2>
-      <div className="grid-auto" style={{ marginBottom:16 }}>
-        <StatCard label={t.cm} value={`${data.cours.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0)}h`} icon="📖" color="#3b82f6" />
-        <StatCard label={t.td} value={`${data.cours.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0)}h`} icon="✏️" color="#10b981" />
-        <StatCard label={t.tp} value={`${data.cours.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0)}h`} icon="🔬" color="#f59e0b" />
-      </div>
-      <div className="grid-2">
-        <div className="card">
-          <h3 style={{ margin:'0 0 .75rem', fontSize:13, fontWeight:600, color:'var(--text2)' }}>{t.vhParEns}</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={ensData}>
-              <XAxis dataKey="name" tick={{ fontSize:10, fill:'#94a3b8' }} />
-              <YAxis tick={{ fontSize:11, fill:'#94a3b8' }} />
-              <Tooltip contentStyle={{ background:'#1e293b', border:'1px solid #334155', borderRadius:8, color:'#f1f5f9' }} formatter={v=>`${v}h`} />
-              <Bar dataKey="vh" name={t.vhAssigne} fill="#f59e0b" radius={[4,4,0,0]} />
-              <Bar dataKey="max" name={t.vhTotal} fill="#334155" radius={[4,4,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="card">
-          <h3 style={{ margin:'0 0 .75rem', fontSize:13, fontWeight:600, color:'var(--text2)' }}>{t.vhParFil}</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={filData}>
-              <XAxis dataKey="name" tick={{ fontSize:10, fill:'#94a3b8' }} />
-              <YAxis tick={{ fontSize:11, fill:'#94a3b8' }} />
-              <Tooltip contentStyle={{ background:'#1e293b', border:'1px solid #334155', borderRadius:8, color:'#f1f5f9' }} formatter={v=>`${v}h`} />
-              <Bar dataKey="vh" fill="#3b82f6" radius={[4,4,0,0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Prévisions ────────────────────────────────────────────────────────────────
-function PrevisionsView({ t, data }) {
-  const [growth,setGrowth]=useState(10);
-  const [generated,setGenerated]=useState(false);
-  const totalVH=data.cours.reduce((s,c)=>s+c.heures,0);
-  const moy=Math.round(totalVH/data.enseignants.length);
-  const prevTot=Math.round(totalVH*(1+growth/100));
-  const prevMoy=Math.round(moy*(1+growth/100));
-  const prevNb=Math.ceil(prevTot/data.enseignants[0].vhTotal);
-  const chartData=[{year:"Actuel",vh:totalVH,moy},{year:"N+1",vh:prevTot,moy:prevMoy},{year:"N+2",vh:Math.round(prevTot*(1+growth/100)),moy:Math.round(prevMoy*(1+growth/100))}];
-
-  return (
-    <div>
-      <h2 style={{ margin:'0 0 1.25rem', fontSize:20, fontWeight:700, color:'var(--text)' }}>{t.prevTitle}</h2>
-      <div className="card">
-        <p style={{ margin:'0 0 1rem', fontSize:13, color:'var(--text2)' }}>{t.basedOn}</p>
-        <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:16, flexWrap:'wrap' }}>
-          <label style={{ fontSize:13, fontWeight:600, color:'var(--text)' }}>{t.growth}</label>
-          <input type="range" min={0} max={50} step={1} value={growth} onChange={e=>setGrowth(+e.target.value)} style={{ width:200, accentColor:'var(--gold)' }} />
-          <span style={{ fontSize:18, fontWeight:700, color:'var(--gold)', minWidth:40 }}>{growth}%</span>
-          <button className="btn btn-gold" onClick={()=>setGenerated(true)}>🔮 {t.generate}</button>
-        </div>
-        {generated && (
-          <>
-            <div className="grid-auto" style={{ marginBottom:'1.5rem' }}>
-              <StatCard label={t.prevTot} value={`${prevTot}h`} icon="📈" color="#3b82f6" sub={`+${growth}%`} />
-              <StatCard label={t.prevNb} value={prevNb} icon="👨‍🏫" color="#10b981" sub={`vs ${data.enseignants.length} actuels`} />
-              <StatCard label={t.prevMoy} value={`${prevMoy}h`} icon="📊" color="#f59e0b" sub={`vs ${moy}h actuel`} />
+            <!-- Floating badges -->
+            <div class="float-badge fb-1" style="top:5%;left:-15%">
+              <div class="fb-dot" style="background:#10b981"></div>
+              <div><div style="font-weight:700;color:#0f172a">192h</div><div style="font-size:9px;color:#64748b">VH Max</div></div>
             </div>
-            <div className="card" style={{ background:'var(--bg3)', border:'1px solid var(--border)' }}>
-              <h3 style={{ margin:'0 0 .75rem', fontSize:13, fontWeight:600, color:'var(--text2)' }}>{t.totalVH} — Évolution</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData}>
-                  <XAxis dataKey="year" tick={{ fontSize:12, fill:'#94a3b8' }} />
-                  <YAxis tick={{ fontSize:11, fill:'#94a3b8' }} />
-                  <Tooltip contentStyle={{ background:'#1e293b', border:'1px solid #334155', borderRadius:8, color:'#f1f5f9' }} formatter={v=>`${v}h`} />
-                  <Bar dataKey="vh" name="VH total" fill="#f59e0b" radius={[4,4,0,0]} />
-                  <Bar dataKey="moy" name="Moyenne" fill="#3b82f6" radius={[4,4,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div class="float-badge fb-2" style="bottom:10%;right:-12%">
+              <div class="fb-dot" style="background:#f59e0b"></div>
+              <div><div style="font-weight:700;color:#0f172a">+${d.filieres.length} Filières</div><div style="font-size:9px;color:#64748b">Actives</div></div>
             </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Main App ──────────────────────────────────────────────────────────────────
-function App() {
-  const [view, setView] = useState("landing"); // landing | login | app
-  const [lang, setLang] = useState("fr");
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [activeNav, setActiveNav] = useState("dash");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [data, setData] = useState(() => {
-    try { const s = localStorage.getItem('gh_vh_data'); return s ? JSON.parse(s) : INIT; } catch { return INIT; }
-  });
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
-  const t = T[lang];
-
-  // Persist data
-  useEffect(() => { try { localStorage.setItem('gh_vh_data', JSON.stringify(data)); } catch {} }, [data]);
-
-  // PWA install prompt
-  useEffect(() => {
-    const handler = e => { e.preventDefault(); setDeferredPrompt(e); };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  // Service worker
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(()=>{});
-    }
-  }, []);
-
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-  };
-
-  if (view === "landing") {
-    return (
-      <>
-        <LandingPage t={t} lang={lang} setLang={setLang} onEnter={() => setView("login")} />
-        {deferredPrompt && (
-          <div className="install-banner">
-            <span>📱 {t.installApp}</span>
-            <span style={{ color:'var(--text2)', fontSize:11 }}>{t.installDesc}</span>
-            <button className="btn btn-gold btn-sm" onClick={handleInstall}>Installer</button>
-            <button className="btn btn-dark btn-sm" onClick={()=>setDeferredPrompt(null)}>✕</button>
+            <div class="float-badge fb-3" style="top:60%;left:-18%">
+              <div class="fb-dot" style="background:#3b82f6"></div>
+              <div><div style="font-weight:700;color:#0f172a">${d.cours.filter(c=>c.type==="TP").length} TP</div><div style="font-size:9px;color:#64748b">Séances</div></div>
+            </div>
           </div>
-        )}
-      </>
-    );
-  }
-
-  if (view === "login" && !loggedIn) {
-    return <Login t={t} lang={lang} setLang={setLang} onLogin={() => { setLoggedIn(true); setView("app"); }} />;
-  }
-
-  return (
-    <div className="app-wrap" dir={t.dir}>
-      <Sidebar t={t} active={activeNav} setActive={setActiveNav} open={sidebarOpen} />
-      <div className="main-area">
-        <Topbar t={t} lang={lang} setLang={setLang}
-          onLogout={() => { setLoggedIn(false); setView("landing"); }}
-          toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        <div className="content-area">
-          {activeNav==="dash" && <DashboardView t={t} data={data} />}
-          {activeNav==="fil"  && <FilieresView t={t} data={data} setData={setData} />}
-          {activeNav==="ens"  && <EnseignantsView t={t} data={data} setData={setData} />}
-          {activeNav==="crs"  && <CoursView t={t} data={data} setData={setData} />}
-          {activeNav==="rep"  && <RepartitionView t={t} data={data} />}
-          {activeNav==="stat" && <StatistiquesView t={t} data={data} />}
-          {activeNav==="prev" && <PrevisionsView t={t} data={data} />}
+          <!-- bg decoration circles -->
+          <div style="position:absolute;width:300px;height:300px;border-radius:50%;border:1px solid rgba(255,255,255,.1);top:-80px;right:-80px"></div>
+          <div style="position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid rgba(255,255,255,.08);bottom:-50px;left:-50px"></div>
+        </div>
+        <!-- RIGHT: hero text -->
+        <div class="hero-right">
+          <div class="hr-tag fade-up">👋 BIENVENUE</div>
+          <h1 class="hr-title fade-up-1">Gérez intelligemment<br>le <span>volume horaire</span><br>de votre département</h1>
+          <p class="hr-sub fade-up-2">Notre plateforme vous aide à organiser, répartir et suivre efficacement les enseignements, les heures et les ressources académiques.</p>
+          <div class="fade-up-3">
+            <button class="btn btn-blue" style="font-size:13.5px;padding:12px 28px;border-radius:50px;box-shadow:0 8px 24px rgba(37,99,235,.35)" onclick="setView('login')">Accéder au tableau de bord →</button>
+          </div>
+          <div class="hero-feat-grid fade-up-4">
+            <div class="hf-card">
+              <div class="hf-icon" style="background:#dbeafe">📊</div>
+              <div><div class="hf-title">Répartition équitable</div><div class="hf-desc">Répartissez les charges de manière juste et automatique.</div></div>
+            </div>
+            <div class="hf-card">
+              <div class="hf-icon" style="background:#dcfce7">📈</div>
+              <div><div class="hf-title">Statistiques avancées</div><div class="hf-desc">Visualisez des statistiques claires et détaillées.</div></div>
+            </div>
+            <div class="hf-card">
+              <div class="hf-icon" style="background:#fef3c7">🔮</div>
+              <div><div class="hf-title">Prévisions annuelles</div><div class="hf-desc">Anticipez les besoins et préparez l'année suivante.</div></div>
+            </div>
+            <div class="hf-card">
+              <div class="hf-icon" style="background:#f3e8ff">🔐</div>
+              <div><div class="hf-title">Gestion sécurisée</div><div class="hf-desc">Vos données sont protégées et sauvegardées.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="l-footer">
+        <span>© 2025 Département d'Informatique — FSM Meknès · Tous droits réservés</span>
+        <div style="display:flex;gap:14px">
+          <span style="cursor:pointer">Facebook</span>
+          <span style="cursor:pointer">Twitter</span>
+          <span style="cursor:pointer">🌐 Site web</span>
         </div>
       </div>
     </div>
-  );
+  </div>`;
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
+// ═══════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════
+function renderLogin(){
+  document.getElementById("app").innerHTML=`
+  <div class="login-page">
+    <div class="login-left">
+      <div style="text-align:center;color:white">
+        <div style="font-size:48px;margin-bottom:1rem">🎓</div>
+        <div style="font-size:1.4rem;font-weight:800;margin-bottom:.5rem">GestionVH</div>
+        <div style="font-size:.85rem;opacity:.8">FSM Meknès — Dept. Informatique</div>
+        <div style="margin-top:2rem;background:rgba(255,255,255,.1);border-radius:14px;padding:1rem;font-size:11px;line-height:2;text-align:left">
+          <div><b>admin</b> / admin123</div>
+          <div><b>chef</b> / chef123</div>
+          <div><b>prof1</b> / prof123</div>
+        </div>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-box">
+        <div class="login-logo">
+          <div class="ll-icon">🎓</div>
+          <div><div class="ll-name">GestionVH</div><div style="font-size:10px;color:var(--text2)">Département Informatique</div></div>
+        </div>
+        <div id="lerr" style="display:none" class="error-msg">Identifiants incorrects.</div>
+        <label class="form-label">Nom d'utilisateur</label>
+        <input class="form-input" id="lu" placeholder="admin, chef, prof1…" autocomplete="username"/>
+        <label class="form-label">Mot de passe</label>
+        <input class="form-input" id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="btn btn-blue" style="width:100%;justify-content:center;padding:11px;font-size:14px;border-radius:12px;margin-top:.25rem" onclick="doLogin()">
+          Se connecter →
+        </button>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px" onclick="setView('landing')">
+          ← Retour à l'accueil
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
 
-<script>
-// Register service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(r => {
-      console.log('SW registered:', r.scope);
-    }).catch(err => console.log('SW failed:', err));
+function doLogin(){
+  const u=document.getElementById("lu").value.trim();
+  const p=document.getElementById("lp").value;
+  const f=USERS.find(x=>x.u===u&&x.p===p);
+  if(!f){document.getElementById("lerr").style.display="block";return;}
+  S.user=f;S.view="app";S.nav="dash";render();
+}
+
+// ═══════════════════════════════════════
+//  APP SHELL
+// ═══════════════════════════════════════
+const NAV=[
+  {id:"dash",icon:"📊",label:"Tableau de bord"},
+  {id:"fil",icon:"🎓",label:"Filières"},
+  {id:"ens",icon:"👨‍🏫",label:"Enseignants"},
+  {id:"crs",icon:"📚",label:"Cours / Modules"},
+  {id:"rep",icon:"📋",label:"Répartition"},
+  {id:"stat",icon:"📈",label:"Statistiques"},
+  {id:"prev",icon:"🔮",label:"Prévisions"},
+];
+
+function renderApp(){
+  const navHTML=NAV.map(n=>`<button class="as-item${S.nav===n.id?" active":""}" onclick="setNav('${n.id}')">
+    <span class="ai">${n.icon}</span>${n.label}
+  </button>`).join("");
+  let content="";
+  if(S.nav==="dash")content=renderDash();
+  else if(S.nav==="fil")content=renderFilieres();
+  else if(S.nav==="ens")content=renderEns();
+  else if(S.nav==="crs")content=renderCours();
+  else if(S.nav==="rep")content=renderRep();
+  else if(S.nav==="stat")content=renderStat();
+  else if(S.nav==="prev")content=renderPrev();
+  const cur=NAV.find(n=>n.id===S.nav);
+  document.getElementById("app").innerHTML=`
+  <div class="app-wrap">
+    <aside class="app-sidebar">
+      <div class="as-logo">
+        <div class="as-logo-icon">🎓</div>
+        <div class="as-logo-name">Dept. Informatique</div>
+        <div class="as-logo-sub">FSM Meknès</div>
+      </div>
+      <nav class="as-nav">${navHTML}</nav>
+      <div class="as-foot">
+        <div class="as-year">
+          <div class="as-year-lbl">Année universitaire</div>
+          <div style="color:#cbd5e1;font-size:11px;font-weight:600">2024 – 2025</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="doLogout()">⏻ Déconnexion</button>
+      </div>
+    </aside>
+    <div class="app-main">
+      <div class="app-topbar">
+        <div class="at-left">
+          <button class="btn btn-ghost btn-sm" onclick="toggleSB()">☰</button>
+          <span class="at-title">${cur?cur.icon+' '+cur.label:''}</span>
+        </div>
+        <div class="at-right">
+          <span style="font-size:11.5px;color:var(--text2)">👤 ${S.user.name}</span>
+          <span style="font-size:10px;background:var(--blue3);color:var(--blue);padding:3px 9px;border-radius:20px;font-weight:600">${S.user.role}</span>
+        </div>
+      </div>
+      <div class="content">${content}</div>
+    </div>
+  </div>`;
+}
+
+function doLogout(){S.user=null;S.view="landing";render();}
+function toggleSB(){const s=document.querySelector(".app-sidebar");s.style.display=s.style.display==="none"?"flex":"none";}
+
+// ═══════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════
+function renderDash(){
+  const d=S.data;
+  const totalVH=d.cours.reduce((s,c)=>s+c.heures,0);
+  const vhA=d.enseignants.reduce((s,e)=>s+e.vhAssigne,0);
+  const moy=d.enseignants.length?Math.round(vhA/d.enseignants.length):0;
+  const cmH=d.cours.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0);
+  const tdH=d.cours.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0);
+  const tpH=d.cours.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0);
+  const scards=[
+    {l:"Volume horaire total",v:totalVH+"h",icon:"⏱️",c:"#2563eb",bg:"#dbeafe",sub:`${d.cours.length} cours`},
+    {l:"Enseignants",v:d.enseignants.length,icon:"👨‍🏫",c:"#16a34a",bg:"#dcfce7",sub:`Moy. ${moy}h`},
+    {l:"Filières",v:d.filieres.length,icon:"🎓",c:"#7c3aed",bg:"#f3e8ff",sub:"Actives"},
+    {l:"Modules",v:d.cours.length,icon:"📚",c:"#b45309",bg:"#fef3c7",sub:`${cmH}CM · ${tdH}TD · ${tpH}TP`},
+  ].map(s=>`<div class="stat-card">
+    <div class="sc-ico" style="background:${s.bg}">${s.icon}</div>
+    <div><div class="sc-lbl">${s.l}</div><div class="sc-val" style="color:${s.c}">${s.v}</div><div class="sc-sub">${s.sub}</div></div>
+  </div>`).join("");
+
+  const rows=d.enseignants.map(e=>{
+    const p=e.vhTotal?Math.round(e.vhAssigne/e.vhTotal*100):0;
+    const c=p>=90?"#dc2626":p>=70?"#b45309":"#16a34a";
+    return`<tr><td><b>${e.nom} ${e.prenom}</b></td><td><span style="font-size:11px;color:var(--text2)">${e.spec}</span></td>
+      <td>${e.vhAssigne}h / ${e.vhTotal}h</td>
+      <td style="min-width:110px">
+        <div class="prog-label"><span></span><span style="color:${c};font-weight:700">${p}%</span></div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${p}%;background:${c}"></div></div>
+      </td></tr>`;
+  }).join("");
+  return`
+  <div class="grid-4 fade-up">${scards}</div>
+  <div class="grid-2" style="margin-bottom:14px">
+    <div class="card fade-up-1">
+      <div class="card-title">VH par enseignant ${svgBarChart(d.enseignants.map(e=>({l:e.nom.substring(0,5),v:e.vhAssigne,max:Math.max(...d.enseignants.map(x=>x.vhTotal))})))}</div>
+    </div>
+    <div class="card fade-up-2">
+      <div class="card-title">Répartition par type de séance</div>
+      ${typeChart(cmH,tdH,tpH,totalVH)}
+    </div>
+  </div>
+  <div class="card fade-up-3">
+    <div class="card-title">Synthèse enseignants <button class="btn btn-outline btn-sm" onclick="setNav('ens')">Tout voir</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Enseignant</th><th>Spécialité</th><th>Volume</th><th>Charge</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function svgBarChart(items){
+  const W=300,H=100,pb=20,pw=16;
+  const max=Math.max(...items.map(x=>x.v),1);
+  const cols=["#2563eb","#7c3aed","#ea580c","#16a34a","#0891b2"];
+  const bars=items.map((it,i)=>{
+    const x=8+i*(W-16)/items.length;
+    const h=Math.round((it.v/max)*(H-pb));
+    const y=H-pb-h;
+    return`<rect x="${x}" y="${y}" width="${pw}" height="${h}" fill="${cols[i%5]}" rx="3" opacity=".85"/>
+      <text x="${x+pw/2}" y="${H-5}" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="Plus Jakarta Sans,sans-serif">${it.l}</text>
+      <text x="${x+pw/2}" y="${y-3}" text-anchor="middle" fill="#0f172a" font-size="7" font-weight="700" font-family="Plus Jakarta Sans,sans-serif">${it.v}</text>`;
+  }).join("");
+  return`<svg viewBox="0 0 ${W} ${H}" width="100%" style="max-height:140px;margin-top:8px">${bars}</svg>`;
+}
+
+function typeChart(cm,td,tp,total){
+  const items=[{l:"Cours Magistraux (CM)",v:cm,c:"#2563eb"},{l:"Travaux Dirigés (TD)",v:td,c:"#16a34a"},{l:"Travaux Pratiques (TP)",v:tp,c:"#b45309"}];
+  return items.map(it=>{
+    const p=total?Math.round(it.v/total*100):0;
+    return`<div style="margin-bottom:10px">
+      <div class="prog-label"><span style="font-size:11.5px;color:var(--text2)">${it.l}</span><span style="color:${it.c};font-weight:700">${it.v}h (${p}%)</span></div>
+      <div class="prog-bg"><div class="prog-fill" style="width:${p}%;background:${it.c}"></div></div>
+    </div>`;
+  }).join("");
+}
+
+// ═══════════════════════════════════════
+//  FILIÈRES
+// ═══════════════════════════════════════
+function renderFilieres(){
+  const d=S.data;
+  const rows=d.filieres.map(f=>{
+    const nb=d.cours.filter(c=>c.filId===f.id).length;
+    const vh=d.cours.filter(c=>c.filId===f.id).reduce((s,c)=>s+c.heures,0);
+    return`<tr><td><b>${f.nom}</b></td><td><span class="badge bdg-cm">${f.niveau}</span></td><td>${f.semestre}</td>
+      <td>${nb}</td><td><b>${vh}h</b></td>
+      <td><div style="display:flex;gap:4px">
+        ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editFil(${f.id})">✏️ Modifier</button>
+        <button class="btn btn-red btn-sm" onclick="delFil(${f.id})">🗑️</button>`:"—"}
+      </div></td></tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up">
+    <div class="page-title">🎓 Filières</div>
+    ${canEdit()?`<button class="btn btn-blue" onclick="addFil()">+ Nouvelle filière</button>`:""}
+  </div>
+  <div class="card fade-up-1">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Nom</th><th>Niveau</th><th>Semestre</th><th>Modules</th><th>VH</th><th>Actions</th></tr></thead>
+      <tbody>${rows||`<tr><td colspan="6" class="empty-state">Aucune filière</td></tr>`}</tbody>
+    </table></div>
+  </div>`;
+}
+function addFil(){
+  openModal("Nouvelle filière",`
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="f-nom" placeholder="Ex: Licence Informatique"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Niveau</label><input class="form-input" id="f-niv" placeholder="L3, M1…"/></div>
+      <div class="form-group"><label class="form-label">Semestre</label><input class="form-input" id="f-sem" placeholder="S1-S2"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="f-desc"/></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveFil(null)">Enregistrer</button>
+    </div>`);
+}
+function editFil(id){
+  const f=S.data.filieres.find(x=>x.id===id);
+  openModal(`Modifier — ${f.nom}`,`
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="f-nom" value="${f.nom}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Niveau</label><input class="form-input" id="f-niv" value="${f.niveau}"/></div>
+      <div class="form-group"><label class="form-label">Semestre</label><input class="form-input" id="f-sem" value="${f.semestre}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="f-desc" value="${f.desc||""}"/></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveFil(${id})">Enregistrer</button>
+    </div>`);
+}
+function saveFil(id){
+  const nom=document.getElementById("f-nom").value.trim();if(!nom)return;
+  const obj={nom,niveau:document.getElementById("f-niv").value,semestre:document.getElementById("f-sem").value,desc:document.getElementById("f-desc").value};
+  if(id){Object.assign(S.data.filieres.find(x=>x.id===id),obj);}
+  else{obj.id=Math.max(0,...S.data.filieres.map(x=>x.id))+1;S.data.filieres.push(obj);}
+  save();closeModal();toast("Filière enregistrée","success");setNav("fil");
+}
+function delFil(id){
+  if(!confirm("Supprimer cette filière ?"))return;
+  S.data.filieres=S.data.filieres.filter(x=>x.id!==id);
+  S.data.cours=S.data.cours.filter(x=>x.filId!==id);
+  save();toast("Filière supprimée");setNav("fil");
+}
+
+// ═══════════════════════════════════════
+//  ENSEIGNANTS
+// ═══════════════════════════════════════
+function renderEns(){
+  const rows=S.data.enseignants.map(e=>{
+    const p=e.vhTotal?Math.round(e.vhAssigne/e.vhTotal*100):0;
+    const c=p>=90?"#dc2626":p>=70?"#b45309":"#16a34a";
+    const libre=e.vhTotal-e.vhAssigne;
+    return`<tr><td><b>${e.nom}</b></td><td>${e.prenom}</td>
+      <td style="font-size:11px;color:var(--text2)">${e.email}</td>
+      <td>${e.spec}</td>
+      <td>${e.vhAssigne}h / ${e.vhTotal}h</td>
+      <td style="min-width:120px">
+        <div class="prog-label"><span style="font-size:10px;color:${c}">Libre: ${libre}h</span><span style="color:${c};font-weight:700">${p}%</span></div>
+        <div class="prog-bg"><div class="prog-fill" style="width:${p}%;background:${c}"></div></div>
+      </td>
+      <td><div style="display:flex;gap:4px">
+        ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editEns(${e.id})">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="delEns(${e.id})">🗑️</button>`:"—"}
+      </div></td></tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up">
+    <div class="page-title">👨‍🏫 Enseignants</div>
+    ${canEdit()?`<button class="btn btn-blue" onclick="addEns()">+ Nouvel enseignant</button>`:""}
+  </div>
+  <div class="card fade-up-1">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Spécialité</th><th>Volume</th><th>Charge</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+function ensForm(e){
+  return`
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="e-nom" value="${e?e.nom:""}"/></div>
+      <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="e-pre" value="${e?e.prenom:""}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="e-mail" type="email" value="${e?e.email:""}"/></div>
+    <div class="form-group"><label class="form-label">Spécialité</label><input class="form-input" id="e-spec" value="${e?e.spec:""}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">VH Total (h)</label><input class="form-input" id="e-vht" type="number" value="${e?e.vhTotal:192}"/></div>
+      <div class="form-group"><label class="form-label">VH Assigné (h)</label><input class="form-input" id="e-vha" type="number" value="${e?e.vhAssigne:0}"/></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveEns(${e?e.id:"null"})">Enregistrer</button>
+    </div>`;
+}
+function addEns(){openModal("Nouvel enseignant",ensForm(null));}
+function editEns(id){const e=S.data.enseignants.find(x=>x.id===id);openModal(`Modifier — ${e.nom}`,ensForm(e));}
+function saveEns(id){
+  const nom=document.getElementById("e-nom").value.trim();if(!nom)return;
+  const obj={nom,prenom:document.getElementById("e-pre").value,email:document.getElementById("e-mail").value,spec:document.getElementById("e-spec").value,vhTotal:+document.getElementById("e-vht").value,vhAssigne:+document.getElementById("e-vha").value};
+  if(id&&id!=="null"){Object.assign(S.data.enseignants.find(x=>x.id===+id),obj);}
+  else{obj.id=Math.max(0,...S.data.enseignants.map(x=>x.id))+1;S.data.enseignants.push(obj);}
+  save();closeModal();toast("Enseignant enregistré","success");setNav("ens");
+}
+function delEns(id){
+  if(!confirm("Supprimer cet enseignant ?"))return;
+  S.data.enseignants=S.data.enseignants.filter(x=>x.id!==id);
+  S.data.cours=S.data.cours.map(function(c){return c.ensId===id?Object.assign({},c,{ensId:null}):c;});
+  save();toast("Enseignant supprimé");setNav("ens");
+}
+
+// ═══════════════════════════════════════
+//  COURS
+// ═══════════════════════════════════════
+function renderCours(){
+  const d=S.data;
+  const rows=d.cours.map(c=>{
+    const f=d.filieres.find(x=>x.id===c.filId);
+    const e=d.enseignants.find(x=>x.id===c.ensId);
+    const bc=c.type==="CM"?"bdg-cm":c.type==="TD"?"bdg-td":"bdg-tp";
+    return`<tr><td><b>${c.intitule}</b></td><td>${f?f.nom:"—"}</td>
+      <td><span class="badge ${bc}">${c.type}</span></td>
+      <td><b>${c.heures}h</b></td>
+      <td>${e?e.nom+" "+e.prenom:"—"}</td>
+      <td><div style="display:flex;gap:4px">
+        ${canEdit()?`<button class="btn btn-ghost btn-sm" onclick="editCours(${c.id})">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="delCours(${c.id})">🗑️</button>`:"—"}
+      </div></td></tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up">
+    <div class="page-title">📚 Cours / Modules</div>
+    ${canEdit()?`<button class="btn btn-blue" onclick="addCours()">+ Nouveau cours</button>`:""}
+  </div>
+  <div class="card fade-up-1">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Intitulé</th><th>Filière</th><th>Type</th><th>Heures</th><th>Enseignant</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+function coursForm(c){
+  const d=S.data;
+  const fils=d.filieres.map(f=>`<option value="${f.id}"${c&&c.filId===f.id?" selected":""}>${f.nom}</option>`).join("");
+  const ens=`<option value="">— Sélectionner —</option>`+d.enseignants.map(e=>`<option value="${e.id}"${c&&c.ensId===e.id?" selected":""}>${e.nom} ${e.prenom}</option>`).join("");
+  return`
+    <div class="form-group"><label class="form-label">Intitulé</label><input class="form-input" id="c-int" value="${c?c.intitule:""}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Filière</label><select class="form-select" id="c-fil">${fils}</select></div>
+      <div class="form-group"><label class="form-label">Type</label><select class="form-select" id="c-type">${["CM","TD","TP"].map(t=>`<option${c&&c.type===t?" selected":""}>${t}</option>`).join("")}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Heures</label><input class="form-input" id="c-h" type="number" min="1" value="${c?c.heures:20}"/></div>
+      <div class="form-group"><label class="form-label">Enseignant</label><select class="form-select" id="c-ens">${ens}</select></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveCours(${c?c.id:"null"})">Enregistrer</button>
+    </div>`;
+}
+function addCours(){openModal("Nouveau cours",coursForm(null));}
+function editCours(id){const c=S.data.cours.find(x=>x.id===id);openModal(`Modifier — ${c.intitule}`,coursForm(c));}
+function saveCours(id){
+  const int=document.getElementById("c-int").value.trim();if(!int)return;
+  const obj={intitule:int,filId:+document.getElementById("c-fil").value,type:document.getElementById("c-type").value,heures:+document.getElementById("c-h").value,ensId:+document.getElementById("c-ens").value||null};
+  if(id&&id!=="null"){Object.assign(S.data.cours.find(x=>x.id===+id),obj);}
+  else{obj.id=Math.max(0,...S.data.cours.map(x=>x.id))+1;S.data.cours.push(obj);}
+  recompVH();save();closeModal();toast("Cours enregistré","success");setNav("crs");
+}
+function delCours(id){
+  if(!confirm("Supprimer ce cours ?"))return;
+  S.data.cours=S.data.cours.filter(x=>x.id!==id);
+  recompVH();save();toast("Cours supprimé");setNav("crs");
+}
+function recompVH(){
+  S.data.enseignants.forEach(e=>{
+    e.vhAssigne=S.data.cours.filter(c=>c.ensId===e.id).reduce((s,c)=>s+c.heures,0);
   });
 }
+
+// ═══════════════════════════════════════
+//  RÉPARTITION
+// ═══════════════════════════════════════
+function renderRep(){
+  const d=S.data;
+  const totalVH=d.cours.reduce((s,c)=>s+c.heures,0);
+  const assigned=d.cours.filter(c=>c.ensId).reduce((s,c)=>s+c.heures,0);
+  const unassigned=d.cours.filter(c=>!c.ensId);
+  const cards=d.enseignants.map(e=>{
+    const ec=d.cours.filter(c=>c.ensId===e.id);
+    const p=e.vhTotal?Math.round(e.vhAssigne/e.vhTotal*100):0;
+    const c=p>=90?"#dc2626":p>=70?"#b45309":"#16a34a";
+    const libre=e.vhTotal-e.vhAssigne;
+    const courseList=ec.map(c=>{
+      const f=d.filieres.find(x=>x.id===c.filId);
+      const bc=c.type==="CM"?"bdg-cm":c.type==="TD"?"bdg-td":"bdg-tp";
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span>${c.intitule} <span class="badge ${bc}" style="font-size:9px">${c.type}</span></span>
+        <span style="color:var(--text2)">${f?f.nom.substring(0,10):"—"} · ${c.heures}h</span>
+      </div>`;
+    }).join("")||`<p style="font-size:12px;color:var(--text3);padding:.5rem 0">Aucun cours affecté</p>`;
+    return`<div class="card" style="animation:fadeUp .5s ease both">
+      <div style="display:flex;justify-content:space-between;margin-bottom:.75rem">
+        <div><b style="font-size:.95rem">${e.nom} ${e.prenom}</b><br><span style="font-size:11px;color:var(--text2)">${e.spec}</span></div>
+        <div style="text-align:right"><b style="color:${c};font-size:1.1rem">${e.vhAssigne}h</b><br><span style="font-size:10px;color:var(--text2)">Libre: ${libre}h</span></div>
+      </div>
+      <div class="prog-label"><span style="font-size:10px;color:${c}">Charge</span><span style="font-weight:700;color:${c}">${p}%</span></div>
+      <div class="prog-bg" style="height:8px;margin-bottom:.75rem"><div class="prog-fill" style="width:${p}%;background:${c}"></div></div>
+      ${courseList}
+    </div>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up"><div class="page-title">📋 Répartition</div></div>
+  <div class="grid-3 fade-up" style="margin-bottom:1.25rem">
+    <div class="stat-card"><div class="sc-ico" style="background:#dbeafe">⏱️</div><div><div class="sc-lbl">Total</div><div class="sc-val" style="color:#2563eb">${totalVH}h</div></div></div>
+    <div class="stat-card"><div class="sc-ico" style="background:#dcfce7">✅</div><div><div class="sc-lbl">Affecté</div><div class="sc-val" style="color:#16a34a">${assigned}h</div></div></div>
+    <div class="stat-card"><div class="sc-ico" style="background:#fef3c7">⚠️</div><div><div class="sc-lbl">Non affecté</div><div class="sc-val" style="color:#b45309">${totalVH-assigned}h</div></div></div>
+  </div>
+  ${unassigned.length?`<div class="card" style="border-color:#fde68a;margin-bottom:1.25rem">
+    <div class="card-title" style="color:#b45309">⚠️ Cours non affectés (${unassigned.length})</div>
+    ${unassigned.map(c=>`<div style="font-size:12px;color:var(--text2);padding:3px 0">• ${c.intitule} — ${c.heures}h</div>`).join("")}
+  </div>`:""}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${cards}</div>`;
+}
+
+// ═══════════════════════════════════════
+//  STATISTIQUES
+// ═══════════════════════════════════════
+function renderStat(){
+  const d=S.data;
+  const totalVH=d.cours.reduce((s,c)=>s+c.heures,0);
+  const vhA=d.enseignants.reduce((s,e)=>s+e.vhAssigne,0);
+  const moy=d.enseignants.length?Math.round(vhA/d.enseignants.length):0;
+  const cmH=d.cours.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0);
+  const tdH=d.cours.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0);
+  const tpH=d.cours.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0);
+  const vhByFil=d.filieres.map(f=>({l:f.nom.substring(0,8),v:d.cours.filter(c=>c.filId===f.id).reduce((s,c)=>s+c.heures,0)}));
+  const synthRows=d.enseignants.map(e=>{
+    const ec=d.cours.filter(c=>c.ensId===e.id);
+    const p=e.vhTotal?Math.round(e.vhAssigne/e.vhTotal*100):0;
+    const c=p>=90?"#dc2626":p>=70?"#b45309":"#16a34a";
+    return`<tr><td><b>${e.nom} ${e.prenom}</b></td><td>${e.spec}</td>
+      <td>${ec.filter(c=>c.type==="CM").reduce((s,c)=>s+c.heures,0)}h</td>
+      <td>${ec.filter(c=>c.type==="TD").reduce((s,c)=>s+c.heures,0)}h</td>
+      <td>${ec.filter(c=>c.type==="TP").reduce((s,c)=>s+c.heures,0)}h</td>
+      <td style="color:${c};font-weight:700">${e.vhAssigne}h</td>
+      <td style="min-width:100px">
+        <div class="prog-bg"><div class="prog-fill" style="width:${p}%;background:${c}"></div></div>
+        <span style="font-size:10px;color:${c};font-weight:700">${p}%</span>
+      </td></tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up"><div class="page-title">📈 Statistiques</div></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem" class="fade-up">
+    ${[{l:"VH Total",v:totalVH+"h",c:"#2563eb"},{l:"VH Assigné",v:vhA+"h",c:"#16a34a"},{l:"Moyenne / ens.",v:moy+"h",c:"#7c3aed"},{l:"CM",v:cmH+"h",c:"#2563eb"},{l:"TD",v:tdH+"h",c:"#16a34a"},{l:"TP",v:tpH+"h",c:"#b45309"}].map(s=>`<div class="stat-card"><div class="sc-ico" style="background:#f8faff">📊</div><div><div class="sc-lbl">${s.l}</div><div class="sc-val" style="color:${s.c}">${s.v}</div></div></div>`).join("")}
+  </div>
+  <div class="grid-2 fade-up-1" style="margin-bottom:1.25rem">
+    <div class="card">
+      <div class="card-title">VH par enseignant</div>
+      ${svgBarChart(d.enseignants.map(e=>({l:e.nom.substring(0,5),v:e.vhAssigne,max:Math.max(...d.enseignants.map(x=>x.vhTotal))})))}
+    </div>
+    <div class="card">
+      <div class="card-title">VH par filière</div>
+      ${svgBarChart(vhByFil)}
+    </div>
+  </div>
+  <div class="card fade-up-2">
+    <div class="card-title">Synthèse détaillée</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Enseignant</th><th>Spécialité</th><th>CM</th><th>TD</th><th>TP</th><th>Total</th><th>Charge</th></tr></thead>
+      <tbody>${synthRows}</tbody>
+    </table></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+//  PRÉVISIONS
+// ═══════════════════════════════════════
+function renderPrev(){
+  const d=S.data;
+  const r=S.prevRate;
+  const totalVH=d.cours.reduce((s,c)=>s+c.heures,0);
+  const prevVH=Math.round(totalVH*(1+r/100));
+  const avgLoad=d.enseignants.length?Math.round(d.enseignants.reduce((s,e)=>s+e.vhTotal,0)/d.enseignants.length):192;
+  const nbNeeded=Math.ceil(prevVH/avgLoad);
+  const prevMoy=d.enseignants.length?Math.round(prevVH/d.enseignants.length):0;
+  const rows=d.filieres.map(f=>{
+    const vh=d.cours.filter(c=>c.filId===f.id).reduce((s,c)=>s+c.heures,0);
+    const pvh=Math.round(vh*(1+r/100));
+    const diff=pvh-vh;
+    return`<tr><td><b>${f.nom}</b></td><td>${f.niveau}</td>
+      <td>${vh}h</td>
+      <td style="color:#2563eb;font-weight:700">${pvh}h</td>
+      <td style="color:#16a34a;font-weight:600">+${diff}h</td></tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up"><div class="page-title">🔮 Prévisions</div></div>
+  <div class="card fade-up-1" style="margin-bottom:1.25rem">
+    <div class="card-title">Taux de croissance estimé</div>
+    <div class="range-wrap">
+      <span style="font-size:12px;color:var(--text2)">0%</span>
+      <input type="range" min="0" max="50" value="${r}" oninput="updPrev(this.value)"/>
+      <span class="range-val" id="prev-lbl">${r}%</span>
+      <span style="font-size:12px;color:var(--text2)">50%</span>
+    </div>
+    <p style="font-size:12px;color:var(--text2)">Ajustez le curseur pour simuler différents scénarios de croissance du volume horaire.</p>
+  </div>
+  <div class="prev-grid fade-up-2">
+    <div class="prev-card"><div class="prev-val">${prevVH}h</div><div class="prev-lbl">Volume horaire prévu</div></div>
+    <div class="prev-card"><div class="prev-val">${nbNeeded}</div><div class="prev-lbl">Enseignants nécessaires</div></div>
+    <div class="prev-card"><div class="prev-val">${prevMoy}h</div><div class="prev-lbl">Moyenne prévue / ens.</div></div>
+  </div>
+  <div class="card fade-up-3">
+    <div class="card-title">Prévision par filière (taux: +${r}%)</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Filière</th><th>Niveau</th><th>VH Actuel</th><th>VH Prévu</th><th>Différence</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+function updPrev(v){
+  S.prevRate=+v;
+  const lbl=document.getElementById("prev-lbl");
+  if(lbl)lbl.textContent=v+"%";
+  const c=document.querySelector(".content");
+  if(c)c.innerHTML=renderPrev();
+}
+
+// ═══════════════════════════════════════
+//  MODAL / TOAST
+// ═══════════════════════════════════════
+function openModal(title,body){
+  document.getElementById("modal-title").textContent=title;
+  document.getElementById("modal-body").innerHTML=body;
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal(){document.getElementById("modal").classList.remove("open");}
+document.getElementById("modal").addEventListener("click",function(e){if(e.target===this)closeModal();});
+
+function toast(msg,type="success"){
+  const el=document.createElement("div");
+  el.className=`toast ${type}`;
+  el.innerHTML=`${type==="success"?"✅":"❌"} ${msg}`;
+  document.getElementById("toast").appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ═══════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════
+function render(){
+  if(S.view==="landing")renderLanding();
+  else if(S.view==="login")renderLogin();
+  else renderApp();
+}
+render();
 </script>
 </body>
 </html>
