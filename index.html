@@ -275,20 +275,26 @@ function loadInitData(){
   try{var r=localStorage.getItem(KEY);return r?JSON.parse(r):JSON.parse(JSON.stringify(INIT));}
   catch(e){return JSON.parse(JSON.stringify(INIT));}
 }
+
+const USERS_KEY="gvh_users";
+const USERS_DEFAULT=[
+  {id:1,u:"admin",email:"admin@fsm.ma",p:"admin123",role:"admin",name:"Administrateur",ensId:null}
+];
+function loadUsers(){
+  try{const r=localStorage.getItem(USERS_KEY);return r?JSON.parse(r):JSON.parse(JSON.stringify(USERS_DEFAULT));}
+  catch(e){return JSON.parse(JSON.stringify(USERS_DEFAULT));}
+}
+function saveUsers(){try{localStorage.setItem(USERS_KEY,JSON.stringify(S.users));}catch(e){}}
+
 let S={
-  view:"landing",nav:"dash",user:null,prevRate:10,
-  data:loadInitData()
+  view:"landing",nav:"dash",user:null,prevRate:10,sidebarOpen:true,
+  data:loadInitData(),
+  users:loadUsers()
 };
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S.data));}catch(e){}};
 const setView=v=>{S.view=v;render();};
 const setNav=n=>{S.nav=n;render();};
 
-const USERS=[
-  {u:"admin",p:"admin123",role:"admin",name:"Administrateur"},
-  {u:"chef",p:"chef123",role:"chef",name:"Chef de Dépt."},
-  {u:"prof1",p:"prof123",role:"enseignant",name:"El Amrani Hassan",ensId:1},
-  {u:"prof2",p:"prof123",role:"enseignant",name:"Benali Fatima",ensId:2},
-];
 const canEdit=()=>S.user&&(S.user.role==="admin"||S.user.role==="chef");
 
 // ═══════════════════════════════════════
@@ -332,7 +338,7 @@ function renderLanding(){
         <div class="ls-logo-sub">Gestion des Enseignements</div>
       </div>
       <nav class="ls-nav">
-        ${navItems.map((n,i)=>`<a class="ln-item${i===0?" active":""}" href="javascript:void(0)" onclick="${i<2?"setView('login')":""}">
+        ${navItems.map((n,i)=>`<a class="ln-item${i===0?" active":""}" href="javascript:void(0)" onclick="setView('login')">
           <span class="ln-icon">${n.icon}</span>${n.label}
         </a>`).join("")}
       </nav>
@@ -453,13 +459,26 @@ function renderLogin(){
   <div class="login-page">
     <div class="login-left">
       <div style="text-align:center;color:white">
-        <div style="font-size:48px;margin-bottom:1rem">🎓</div>
-        <div style="font-size:1.4rem;font-weight:800;margin-bottom:.5rem">GestionVH</div>
+        <div style="font-size:56px;margin-bottom:1.25rem">🎓</div>
+        <div style="font-size:1.5rem;font-weight:800;margin-bottom:.5rem">GestionVH</div>
         <div style="font-size:.85rem;opacity:.8">FSM Meknès — Dept. Informatique</div>
-        <div style="margin-top:2rem;background:rgba(255,255,255,.1);border-radius:14px;padding:1rem;font-size:11px;line-height:2;text-align:left">
-          <div><b>admin</b> / admin123</div>
-          <div><b>chef</b> / chef123</div>
-          <div><b>prof1</b> / prof123</div>
+        <div style="margin-top:2.5rem;background:rgba(255,255,255,.08);border-radius:16px;padding:1.25rem 1.5rem;text-align:left">
+          <div style="font-size:10px;opacity:.5;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem">Accès sécurisé</div>
+          <div style="font-size:12px;opacity:.85;line-height:2">
+            <div>🔑 Connexion par identifiant ou email</div>
+            <div>🛡️ Comptes gérés par l'administrateur</div>
+            <div>👤 Rôles : admin · chef · enseignant</div>
+          </div>
+        </div>
+        <div style="margin-top:1rem;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:1rem 1.25rem;text-align:left">
+          <div style="font-size:10px;opacity:.55;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem">Compte administrateur par défaut</div>
+          <div style="font-size:12.5px;font-weight:700;letter-spacing:.02em;opacity:.95">
+            <div style="margin-bottom:4px">👤 <span style="opacity:.75;font-weight:400">Identifiant :</span> admin</div>
+            <div>🔒 <span style="opacity:.75;font-weight:400">Mot de passe :</span> admin123</div>
+          </div>
+          <button onclick="document.getElementById('lu').value='admin';document.getElementById('lp').value='admin123';" style="margin-top:.75rem;width:100%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:white;border-radius:8px;padding:6px 12px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:var(--font)">
+            ↙ Remplir automatiquement
+          </button>
         </div>
       </div>
     </div>
@@ -467,11 +486,11 @@ function renderLogin(){
       <div class="login-box">
         <div class="login-logo">
           <div class="ll-icon">🎓</div>
-          <div><div class="ll-name">GestionVH</div><div style="font-size:10px;color:var(--text2)">Département Informatique</div></div>
+          <div><div class="ll-name">GestionVH</div><div style="font-size:10px;color:var(--text2)">Département Informatique — FSM Meknès</div></div>
         </div>
-        <div id="lerr" style="display:none" class="error-msg">Identifiants incorrects.</div>
-        <label class="form-label">Nom d'utilisateur</label>
-        <input class="form-input" id="lu" placeholder="admin, chef, prof1…" autocomplete="username"/>
+        <div id="lerr" style="display:none" class="error-msg">Identifiants incorrects. Veuillez réessayer.</div>
+        <label class="form-label">Identifiant ou Email</label>
+        <input class="form-input" id="lu" placeholder="Votre identifiant ou email…" autocomplete="username"/>
         <label class="form-label">Mot de passe</label>
         <input class="form-input" id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
         <button class="btn btn-blue" style="width:100%;justify-content:center;padding:11px;font-size:14px;border-radius:12px;margin-top:.25rem" onclick="doLogin()">
@@ -486,10 +505,11 @@ function renderLogin(){
 }
 
 function doLogin(){
-  const u=document.getElementById("lu").value.trim();
+  const u=document.getElementById("lu").value.trim().toLowerCase();
   const p=document.getElementById("lp").value;
-  const f=USERS.find(x=>x.u===u&&x.p===p);
+  const f=S.users.find(x=>(x.u.toLowerCase()===u||x.email.toLowerCase()===u)&&x.p===p);
   if(!f){document.getElementById("lerr").style.display="block";return;}
+  document.getElementById("lerr").style.display="none";
   S.user=f;S.view="app";S.nav="dash";render();
 }
 
@@ -504,10 +524,12 @@ const NAV=[
   {id:"rep",icon:"📋",label:"Répartition"},
   {id:"stat",icon:"📈",label:"Statistiques"},
   {id:"prev",icon:"🔮",label:"Prévisions"},
+  {id:"usr",icon:"🔐",label:"Utilisateurs",adminOnly:true},
 ];
 
 function renderApp(){
-  const navHTML=NAV.map(n=>`<button class="as-item${S.nav===n.id?" active":""}" onclick="setNav('${n.id}')">
+  const visibleNav=NAV.filter(n=>!n.adminOnly||(S.user&&S.user.role==="admin"));
+  const navHTML=visibleNav.map(n=>`<button class="as-item${S.nav===n.id?" active":""}" onclick="setNav('${n.id}')">
     <span class="ai">${n.icon}</span>${n.label}
   </button>`).join("");
   let content="";
@@ -518,10 +540,11 @@ function renderApp(){
   else if(S.nav==="rep")content=renderRep();
   else if(S.nav==="stat")content=renderStat();
   else if(S.nav==="prev")content=renderPrev();
-  const cur=NAV.find(n=>n.id===S.nav);
+  else if(S.nav==="usr"&&S.user.role==="admin")content=renderUsers();
+  const cur=visibleNav.find(n=>n.id===S.nav)||visibleNav[0];
   document.getElementById("app").innerHTML=`
   <div class="app-wrap">
-    <aside class="app-sidebar">
+    <aside class="app-sidebar" style="${S.sidebarOpen?'':'display:none'}">
       <div class="as-logo">
         <div class="as-logo-icon">🎓</div>
         <div class="as-logo-name">Dept. Informatique</div>
@@ -552,8 +575,8 @@ function renderApp(){
   </div>`;
 }
 
-function doLogout(){S.user=null;S.view="landing";render();}
-function toggleSB(){const s=document.querySelector(".app-sidebar");s.style.display=s.style.display==="none"?"flex":"none";}
+function doLogout(){S.user=null;S.view="landing";S.sidebarOpen=true;render();}
+function toggleSB(){S.sidebarOpen=!S.sidebarOpen;const s=document.querySelector(".app-sidebar");if(s)s.style.display=S.sidebarOpen?"flex":"none";}
 
 // ═══════════════════════════════════════
 //  DASHBOARD
@@ -590,7 +613,8 @@ function renderDash(){
   <div class="grid-4 fade-up">${scards}</div>
   <div class="grid-2" style="margin-bottom:14px">
     <div class="card fade-up-1">
-      <div class="card-title">VH par enseignant ${svgBarChart(d.enseignants.map(e=>({l:e.nom.substring(0,5),v:e.vhAssigne,max:Math.max(...d.enseignants.map(x=>x.vhTotal))})))}</div>
+      <div class="card-title">VH par enseignant</div>
+      ${svgBarChart(d.enseignants.map(e=>({l:e.nom.substring(0,5),v:e.vhAssigne,max:Math.max(...d.enseignants.map(x=>x.vhTotal))})))}
     </div>
     <div class="card fade-up-2">
       <div class="card-title">Répartition par type de séance</div>
@@ -741,10 +765,8 @@ function ensForm(e){
     </div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="e-mail" type="email" value="${e?e.email:""}"/></div>
     <div class="form-group"><label class="form-label">Spécialité</label><input class="form-input" id="e-spec" value="${e?e.spec:""}"/></div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">VH Total (h)</label><input class="form-input" id="e-vht" type="number" value="${e?e.vhTotal:192}"/></div>
-      <div class="form-group"><label class="form-label">VH Assigné (h)</label><input class="form-input" id="e-vha" type="number" value="${e?e.vhAssigne:0}"/></div>
-    </div>
+    <div class="form-group"><label class="form-label">VH Total (h)</label><input class="form-input" id="e-vht" type="number" min="1" value="${e?e.vhTotal:192}"/></div>
+    <p style="font-size:11px;color:var(--text2);margin-bottom:.75rem">ℹ️ Le volume assigné est calculé automatiquement à partir des cours affectés.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
       <button class="btn btn-blue" onclick="saveEns(${e?e.id:"null"})">Enregistrer</button>
@@ -754,10 +776,16 @@ function addEns(){openModal("Nouvel enseignant",ensForm(null));}
 function editEns(id){const e=S.data.enseignants.find(x=>x.id===id);openModal(`Modifier — ${e.nom}`,ensForm(e));}
 function saveEns(id){
   const nom=document.getElementById("e-nom").value.trim();if(!nom)return;
-  const obj={nom,prenom:document.getElementById("e-pre").value,email:document.getElementById("e-mail").value,spec:document.getElementById("e-spec").value,vhTotal:+document.getElementById("e-vht").value,vhAssigne:+document.getElementById("e-vha").value};
-  if(id&&id!=="null"){Object.assign(S.data.enseignants.find(x=>x.id===+id),obj);}
-  else{obj.id=Math.max(0,...S.data.enseignants.map(x=>x.id))+1;S.data.enseignants.push(obj);}
-  save();closeModal();toast("Enseignant enregistré","success");setNav("ens");
+  const obj={nom,prenom:document.getElementById("e-pre").value,email:document.getElementById("e-mail").value,spec:document.getElementById("e-spec").value,vhTotal:+document.getElementById("e-vht").value};
+  if(id&&id!=="null"){
+    const existing=S.data.enseignants.find(x=>x.id===+id);
+    Object.assign(existing,obj);
+  } else {
+    obj.id=Math.max(0,...S.data.enseignants.map(x=>x.id))+1;
+    obj.vhAssigne=0;
+    S.data.enseignants.push(obj);
+  }
+  recompVH();save();closeModal();toast("Enseignant enregistré","success");setNav("ens");
 }
 function delEns(id){
   if(!confirm("Supprimer cet enseignant ?"))return;
@@ -977,10 +1005,101 @@ function renderPrev(){
 }
 function updPrev(v){
   S.prevRate=+v;
-  const lbl=document.getElementById("prev-lbl");
-  if(lbl)lbl.textContent=v+"%";
   const c=document.querySelector(".content");
   if(c)c.innerHTML=renderPrev();
+}
+
+// ═══════════════════════════════════════
+//  UTILISATEURS (admin seulement)
+// ═══════════════════════════════════════
+function renderUsers(){
+  const rows=S.users.map(u=>{
+    const roleColor=u.role==="admin"?"#dc2626":u.role==="chef"?"#7c3aed":"#2563eb";
+    const roleBg=u.role==="admin"?"#fef2f2":u.role==="chef"?"#f3e8ff":"#dbeafe";
+    const isMe=S.user.id===u.id;
+    return`<tr>
+      <td><b>${u.name}</b>${isMe?` <span style="font-size:9px;background:#dcfce7;color:#16a34a;padding:2px 7px;border-radius:10px;font-weight:700">Vous</span>`:""}</td>
+      <td style="color:var(--text2);font-size:11.5px">${u.u}</td>
+      <td style="color:var(--text2);font-size:11.5px">${u.email}</td>
+      <td><span style="background:${roleBg};color:${roleColor};border-radius:6px;padding:3px 9px;font-size:10px;font-weight:700">${u.role}</span></td>
+      <td>${u.ensId?`Enseignant #${u.ensId}`:"—"}</td>
+      <td><div style="display:flex;gap:4px">
+        <button class="btn btn-ghost btn-sm" onclick="editUser(${u.id})">✏️</button>
+        ${!isMe?`<button class="btn btn-red btn-sm" onclick="delUser(${u.id})">🗑️</button>`:""}
+      </div></td>
+    </tr>`;
+  }).join("");
+  return`
+  <div class="page-hdr fade-up">
+    <div class="page-title">🔐 Gestion des Utilisateurs</div>
+    <button class="btn btn-blue" onclick="addUser()">+ Nouvel utilisateur</button>
+  </div>
+  <div class="card fade-up-1" style="margin-bottom:1rem;border-color:#dbeafe;background:#eff6ff">
+    <div style="font-size:12px;color:#1d4ed8">ℹ️ Seul l'administrateur peut créer, modifier ou supprimer des comptes d'accès. Chaque utilisateur se connecte avec son nom d'utilisateur ou son email.</div>
+  </div>
+  <div class="card fade-up-2">
+    <div class="table-wrap"><table>
+      <thead><tr><th>Nom</th><th>Identifiant</th><th>Email</th><th>Rôle</th><th>Lié à</th><th>Actions</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function userForm(u){
+  const ensOptions=`<option value="">— Aucun —</option>`+
+    S.data.enseignants.map(e=>`<option value="${e.id}"${u&&u.ensId===e.id?" selected":""}>${e.nom} ${e.prenom}</option>`).join("");
+  return`
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nom complet</label><input class="form-input" id="uf-name" value="${u?u.name:""}"/></div>
+      <div class="form-group"><label class="form-label">Identifiant (login)</label><input class="form-input" id="uf-u" value="${u?u.u:""}"/></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="uf-email" type="email" value="${u?u.email:""}"/></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Mot de passe${u?" (laisser vide = inchangé)":""}</label><input class="form-input" id="uf-p" type="password" placeholder="••••••••"/></div>
+      <div class="form-group"><label class="form-label">Rôle</label>
+        <select class="form-select" id="uf-role">
+          ${["admin","chef","enseignant"].map(r=>`<option${u&&u.role===r?" selected":""}>${r}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Lier à un enseignant (optionnel)</label>
+      <select class="form-select" id="uf-ens">${ensOptions}</select>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveUser(${u?u.id:"null"})">Enregistrer</button>
+    </div>`;
+}
+
+function addUser(){openModal("Nouvel utilisateur",userForm(null));}
+function editUser(id){const u=S.users.find(x=>x.id===id);openModal(`Modifier — ${u.name}`,userForm(u));}
+
+function saveUser(id){
+  const name=document.getElementById("uf-name").value.trim();
+  const username=document.getElementById("uf-u").value.trim();
+  const email=document.getElementById("uf-email").value.trim();
+  const pwd=document.getElementById("uf-p").value;
+  const role=document.getElementById("uf-role").value;
+  const ensId=+document.getElementById("uf-ens").value||null;
+  if(!name||!username||!email){toast("Veuillez remplir tous les champs obligatoires","error");return;}
+  // vérifier unicité username/email
+  const dup=S.users.find(x=>(x.u===username||x.email===email)&&x.id!==+id);
+  if(dup){toast("Identifiant ou email déjà utilisé","error");return;}
+  if(id&&id!=="null"){
+    const u=S.users.find(x=>x.id===+id);
+    u.name=name;u.u=username;u.email=email;u.role=role;u.ensId=ensId;
+    if(pwd)u.p=pwd;
+  } else {
+    if(!pwd){toast("Le mot de passe est obligatoire","error");return;}
+    S.users.push({id:Math.max(0,...S.users.map(x=>x.id))+1,name,u:username,email,p:pwd,role,ensId});
+  }
+  saveUsers();closeModal();toast("Utilisateur enregistré","success");setNav("usr");
+}
+
+function delUser(id){
+  if(!confirm("Supprimer cet utilisateur ?"))return;
+  S.users=S.users.filter(x=>x.id!==id);
+  saveUsers();toast("Utilisateur supprimé");setNav("usr");
 }
 
 // ═══════════════════════════════════════
