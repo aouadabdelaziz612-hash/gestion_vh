@@ -1,0 +1,44 @@
+{
+  "name": "GestionVH — Faculté des Sciences Meknès",
+  "short_name": "GestionVH",
+  "description": "Système de gestion des volumes horaires — Faculté des Sciences, Université Moulay Ismaïl Meknès",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1d4ed8",
+  "lang": "fr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "short_name": "Dashboard",
+      "description": "Accéder au tableau de bord principal",
+      "url": "./index.html#dash",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Emploi du temps",
+      "short_name": "Emploi du temps",
+      "description": "Consulter l'emploi du temps",
+      "url": "./index.html#edt",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
