@@ -4,16 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>GestionVH — Faculté des Sciences Meknès</title>
-<!-- PWA -->
-<link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#1d4ed8"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="GestionVH"/>
-<link rel="apple-touch-icon" href="icon-192.png"/>
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
-<meta name="description" content="Système de gestion des volumes horaires — FSM Meknès"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -1599,14 +1589,5 @@ function render(){
 }
 render();
 </script>
-  <script>
-    if("serviceWorker" in navigator){
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js")
-          .then(reg => console.log("[PWA] SW registered ✅", reg.scope))
-          .catch(err => console.warn("[PWA] SW registration failed:", err));
-      });
-    }
-  </script>
 </body>
 </html>
